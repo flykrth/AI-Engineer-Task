@@ -74,7 +74,7 @@ def load_llm_config(
         return LLMConfig(
             provider="gemini",
             api_key=(os.getenv("GEMINI_API_KEY") or "").strip() or None,
-            chat_model=(os.getenv("GEMINI_CHAT_MODEL") or "gemini-3.8-flash").strip(),
+            chat_model=(os.getenv("GEMINI_CHAT_MODEL") or "gemini-3.5-flash-lite").strip(),
             embed_model=(
                 os.getenv("GEMINI_EMBED_MODEL") or "gemini-embedding-001"
             ).strip(),

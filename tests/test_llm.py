@@ -42,7 +42,7 @@ def test_provider_selection_defaults_and_overrides(
 
     default_cfg = load_llm_config(load_env=False)
     assert default_cfg.provider == "gemini"
-    assert default_cfg.chat_model == "gemini-3.8-flash"
+    assert default_cfg.chat_model == "gemini-3.5-flash-lite"
     assert default_cfg.embed_model == "gemini-embedding-001"
 
     monkeypatch.setenv("LLM_PROVIDER", "openai")
@@ -121,7 +121,7 @@ def test_gemini_adapter_mocked_text_structured_and_embeddings() -> None:
     cfg = LLMConfig(
         provider="gemini",
         api_key="test-key",
-        chat_model="gemini-3.8-flash",
+        chat_model="gemini-3.5-flash-lite",
         embed_model="gemini-embedding-001",
     )
     adapter = GeminiAdapter(cfg, client=fake_client)
@@ -252,7 +252,7 @@ def test_exponential_backoff_retries_on_429_and_503_but_not_404() -> None:
     cfg = LLMConfig(
         provider="gemini",
         api_key="test-key",
-        chat_model="gemini-3.8-flash",
+        chat_model="gemini-3.5-flash-lite",
         embed_model="gemini-embedding-001",
         max_retries=3,
         retry_base_delay=1.0,
