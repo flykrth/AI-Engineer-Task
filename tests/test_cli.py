@@ -1,13 +1,16 @@
-"""Unit tests for the CLI entrypoint covering Phase 3 retrieval and verified Q&A."""
+"""Unit tests for the Rich CLI, interactive REPL, and unified run.py entrypoint."""
 
 from __future__ import annotations
 
 import json
+import sys
+import types
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
 import pytest
+import uvicorn
 
 from run import run_cli
 from src.llm import BaseLLMAdapter, LLMConfig, MissingAPIKeyError
@@ -220,6 +223,7 @@ def test_run_cli_phase3_qa_json_text_and_rebuild(
     assert len(fake.embed_calls) == 3  # +1 query embedding only
     text_out = capsys.readouterr().out
     assert "Answer: The team switched from ProviderA to ProviderB." in text_out
+    assert "[verified]" in text_out
     assert "Evidence:" in text_out
     assert "[M002 | L2 | 02/10/26, 09:00 AM | Alice]" in text_out
 
@@ -293,13 +297,84 @@ def test_run_cli_missing_key_returns_nonzero_clean_error(
     assert "GEMINI_API_KEY is not set." in err
 
 
-def test_run_cli_missing_action_returns_argument_error(
+def test_run_cli_default_interactive_repl(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    exit_code = run_cli(["--chat", str(TEAM_CHAT_PATH)])
-    assert exit_code == 2
-    err = capsys.readouterr().err
-    assert "--question" in err and "--state-only" in err
+    raw, extraction = _make_sample_chat_and_extraction()
+    chat_file = tmp_path / "chat.txt"
+    chat_file.write_text(raw, encoding="utf-8")
+    cache_dir = tmp_path / ".cache"
+
+    fake = FakePipelineAdapter(
+        extraction,
+        drafts=[
+            DraftAnswer(
+                reasoning_trace="ProviderB replaced ProviderA in M002.",
+                supported=True,
+                partial_status_only=False,
+                answer="Gateway choice changed from ProviderA to ProviderB.",
+                evidence_msg_ids=["M002"],
+            )
+        ],
+    )
+
+    prompts_seen: list[str] = []
+    inputs = iter(["help", "state", "What gateway did we choose?", "rebuild", "exit"])
+
+    def fake_input(prompt: str = "") -> str:
+        prompts_seen.append(prompt)
+        return next(inputs)
+
+    monkeypatch.setattr("builtins.input", fake_input)
+
+    exit_code = run_cli(
+        ["--chat", str(chat_file)],
+        adapter_factory=lambda provider=None: fake,
+        cache_dir=cache_dir,
+    )
+    assert exit_code == 0
+    assert len(prompts_seen) == 5
+    assert all(
+        prompt == "Ask a question (commands: state, rebuild, help, exit): "
+        for prompt in prompts_seen
+    )
+    assert fake.compiler_calls == 2  # initial compile + explicit rebuild command
+    assert fake.qa_calls == 1
+    assert len(fake.embed_calls) == 3  # initial index + query + rebuild index
+
+    out = capsys.readouterr().out
+    assert "State of the project" in out
+    assert "Interactive commands" in out
+    assert "Answer: Gateway choice changed from ProviderA to ProviderB." in out
+    assert "[M002 | L2 | 02/10/26, 09:00 AM | Alice]" in out
+    assert "Project state and retrieval index rebuilt." in out
+    assert "Exiting interactive session." in out
+
+
+def test_run_cli_interactive_eof_exits_cleanly(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    raw, extraction = _make_sample_chat_and_extraction()
+    chat_file = tmp_path / "chat.txt"
+    chat_file.write_text(raw, encoding="utf-8")
+    fake = FakePipelineAdapter(extraction)
+
+    def raise_eof(prompt: str = "") -> str:
+        raise EOFError
+
+    monkeypatch.setattr("builtins.input", raise_eof)
+
+    exit_code = run_cli(
+        ["--chat", str(chat_file)],
+        adapter_factory=lambda provider=None: fake,
+        cache_dir=tmp_path / ".cache",
+    )
+    assert exit_code == 0
+    assert "Exiting interactive session." in capsys.readouterr().out
 
 
 def test_run_cli_state_only_text_json_and_rebuild(
@@ -325,7 +400,7 @@ def test_run_cli_state_only_text_json_and_rebuild(
     assert "1. Current decisions" in out_text
     assert "Prior values: ProviderA" in out_text
     assert "2. Tasks and ownership" in out_text
-    assert "owner=Bob | status=assigned" in out_text
+    assert "Bob" in out_text and "[assigned]" in out_text
     assert "3. Deadlines" in out_text
     assert "rule: 2 days before release" in out_text
     assert "4. Open, unassigned, or unconfirmed items" in out_text
@@ -352,3 +427,82 @@ def test_run_cli_state_only_text_json_and_rebuild(
     assert exit_rebuild == 0
     assert fake.compiler_calls == 2
     assert "Source: compiled" in capsys.readouterr().out
+
+
+def test_run_cli_web_dispatch(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    raw, extraction = _make_sample_chat_and_extraction()
+    chat_file = tmp_path / "chat.txt"
+    chat_file.write_text(raw, encoding="utf-8")
+    fake = FakePipelineAdapter(extraction)
+    cache_dir = tmp_path / ".cache"
+
+    captured: dict[str, Any] = {}
+    stub_app = object()
+
+    stub_module = types.ModuleType("src.web.app")
+
+    def fake_create_app(
+        chat_path: Path,
+        *,
+        provider: str | None = None,
+        rebuild: bool = False,
+        cache_dir: Path | None = None,
+        adapter_factory: Any = None,
+    ) -> Any:
+        captured["create_app_args"] = {
+            "chat_path": chat_path,
+            "provider": provider,
+            "rebuild": rebuild,
+            "cache_dir": cache_dir,
+            "adapter": adapter_factory(provider=provider),
+        }
+        return stub_app
+
+    stub_module.create_app = fake_create_app  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "src.web.app", stub_module)
+
+    def fake_uvicorn_run(app: Any, *, host: str, port: int) -> None:
+        captured["uvicorn"] = {"app": app, "host": host, "port": port}
+
+    monkeypatch.setattr(uvicorn, "run", fake_uvicorn_run)
+
+    exit_code = run_cli(
+        [
+            "--chat",
+            str(chat_file),
+            "--web",
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "8123",
+            "--rebuild",
+            "--provider",
+            "openai",
+        ],
+        adapter_factory=lambda provider=None: fake,
+        cache_dir=cache_dir,
+    )
+    assert exit_code == 0
+    assert captured["create_app_args"]["chat_path"] == chat_file
+    assert captured["create_app_args"]["provider"] == "openai"
+    assert captured["create_app_args"]["rebuild"] is True
+    assert captured["create_app_args"]["cache_dir"] == cache_dir
+    assert captured["uvicorn"] == {"app": stub_app, "host": "0.0.0.0", "port": 8123}
+
+
+def test_run_cli_invalid_flag_combinations(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    chat_file = tmp_path / "chat.txt"
+    chat_file.write_text("01/10/26, 09:00 AM - Alice: hi\n", encoding="utf-8")
+
+    assert run_cli(["--chat", str(chat_file), "--question", "   "]) == 2
+    assert "--question must not be empty" in capsys.readouterr().err
+
+    assert run_cli(["--chat", str(chat_file), "--web", "--state-only"]) == 2
+    assert "--web cannot be combined" in capsys.readouterr().err
+
+    assert run_cli(["--chat", str(chat_file), "--json"]) == 2
+    assert "--json requires" in capsys.readouterr().err

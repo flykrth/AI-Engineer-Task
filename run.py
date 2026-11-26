@@ -11,19 +11,28 @@ from typing import Any
 from google.genai import errors as genai_errors
 import httpx
 import openai
+import uvicorn
 
+from src.cli import (
+    create_console,
+    render_project_state,
+    render_verified_answer,
+    run_interactive_session,
+)
 from src.compiler import compile_project_state_with_meta
-from src.llm import BaseLLMAdapter, LLMError, create_llm_adapter
-from src.parser import ParsedChat, parse_chat_file
+from src.llm import LLMError, create_llm_adapter
+from src.parser import parse_chat_file
 from src.qa import answer_and_verify
 from src.retriever import HybridRetriever
-from src.schemas import EvidenceRef, ProjectState, VerifiedAnswer
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
     """Create the CLI argument parser."""
     parser = argparse.ArgumentParser(
-        description="Compile temporal project state and answer grounded questions about an exported WhatsApp group chat."
+        description=(
+            "Compile temporal project state and answer grounded questions "
+            "about an exported WhatsApp group chat."
+        )
     )
     parser.add_argument(
         "--chat",
@@ -35,12 +44,29 @@ def build_arg_parser() -> argparse.ArgumentParser:
         "--question",
         type=str,
         default=None,
-        help="Question to answer from the chat.",
+        help="Question to answer from the chat (skips interactive mode).",
     )
     parser.add_argument(
         "--state-only",
         action="store_true",
-        help="Compile and display the current project state without answering a question.",
+        help="Compile and display the current project state without entering interactive mode.",
+    )
+    parser.add_argument(
+        "--web",
+        action="store_true",
+        help="Launch the FastAPI single-page web dashboard.",
+    )
+    parser.add_argument(
+        "--host",
+        type=str,
+        default="127.0.0.1",
+        help="Host interface to bind when running with --web (default: 127.0.0.1).",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=8000,
+        help="Port to bind when running with --web (default: 8000).",
     )
     parser.add_argument(
         "--rebuild",
@@ -57,164 +83,31 @@ def build_arg_parser() -> argparse.ArgumentParser:
         "--json",
         action="store_true",
         dest="as_json",
-        help="Print structured JSON output instead of formatted text.",
+        help="Print structured JSON output for --question or --state-only.",
     )
     return parser
 
 
-def _format_evidence_ref(ref: EvidenceRef) -> str:
-    """Format an EvidenceRef as [msg_id | line_ref | timestamp_raw | sender]."""
-    sender_label = ref.sender if ref.sender is not None else "system"
-    line_ref = (
-        f"L{ref.line_start}"
-        if ref.line_start == ref.line_end
-        else f"L{ref.line_start}-L{ref.line_end}"
-    )
-    return f"[{ref.msg_id} | {line_ref} | {ref.timestamp_raw} | {sender_label}]"
-
-
-def _format_citation_list(refs: list[EvidenceRef]) -> str:
-    if not refs:
-        return "[no verified citations]"
-    return ", ".join(_format_evidence_ref(ref) for ref in refs)
-
-
-def format_state_text(
-    state: ProjectState,
-    adapter: BaseLLMAdapter,
+def _launch_web_dashboard(
+    chat_path: Path,
     *,
-    from_cache: bool,
-) -> str:
-    """Render a readable plain-text 'State of the project' summary grouped by section."""
-    source_label = "cache" if from_cache else "compiled"
-    parts = [
-        "State of the project",
-        f"Provider: {adapter.provider_name} ({adapter.chat_model}) | Source: {source_label}",
-        (
-            f"Messages: {state.total_messages} | Date order: {state.date_order} | "
-            f"Last message: {state.last_message_timestamp or 'n/a'}"
-        ),
-        (
-            "Participants: "
-            + (", ".join(state.participants) if state.participants else "none")
-        ),
-        "",
-        "1. Current decisions",
-    ]
+    host: str,
+    port: int,
+    provider: str | None,
+    rebuild: bool,
+    cache_dir: Path | None,
+    adapter_factory: Any,
+) -> None:
+    from src.web.app import create_app
 
-    if not state.decisions:
-        parts.append("  (none)")
-    else:
-        for decision in state.decisions:
-            parts.append(
-                f"  - {decision.title} ({decision.topic_key}): "
-                f"{decision.current_value} [{decision.status}]"
-            )
-            if len(decision.history) > 1:
-                prior_chain = " -> ".join(
-                    f"{entry.value} ({entry.action}, {entry.timestamp_raw})"
-                    for entry in decision.history[:-1]
-                )
-                parts.append(f"    Prior values: {prior_chain}")
-            parts.append(f"    Citations: {_format_citation_list(decision.evidence)}")
-
-    parts.extend(["", "2. Tasks and ownership"])
-    if not state.tasks:
-        parts.append("  (none)")
-    else:
-        for task in state.tasks:
-            owner_label = task.current_owner or "unassigned"
-            note_part = f" | note: {task.status_note}" if task.status_note else ""
-            parts.append(
-                f"  - {task.title} ({task.task_key}): "
-                f"owner={owner_label} | status={task.status}{note_part}"
-            )
-            if len(task.history) > 1:
-                history_chain = " -> ".join(
-                    f"{entry.action} ({entry.owner or 'unassigned'}, {entry.timestamp_raw})"
-                    for entry in task.history
-                )
-                parts.append(f"    History: {history_chain}")
-            parts.append(f"    Citations: {_format_citation_list(task.evidence)}")
-
-    parts.extend(["", "3. Deadlines"])
-    if not state.deadlines:
-        parts.append("  (none)")
-    else:
-        for deadline in state.deadlines:
-            rule_part = (
-                f" | rule: {deadline.dependency_rule}"
-                if deadline.dependency_rule
-                else ""
-            )
-            parts.append(
-                f"  - {deadline.title} ({deadline.item_key}): "
-                f"{deadline.current_date_text} [{deadline.status}]{rule_part}"
-            )
-            if len(deadline.history) > 1:
-                prior_shifts = " -> ".join(
-                    f"{entry.value} ({entry.timestamp_raw})"
-                    for entry in deadline.history[:-1]
-                )
-                parts.append(f"    Prior shifts: {prior_shifts}")
-            parts.append(f"    Citations: {_format_citation_list(deadline.evidence)}")
-
-    parts.extend(["", "4. Open, unassigned, or unconfirmed items"])
-    open_lines: list[str] = []
-    for item in state.open_items:
-        if item.status == "resolved":
-            continue
-        owner_part = f" | owner: {item.owner}" if item.owner else ""
-        open_lines.append(
-            f"  - [issue:{item.status}] {item.title} ({item.issue_key}): "
-            f"{item.description}{owner_part}"
-        )
-        open_lines.append(f"    Citations: {_format_citation_list(item.evidence)}")
-
-    for task in state.tasks:
-        if task.status in ("unassigned", "unconfirmed", "blocked"):
-            owner_part = f"owner={task.current_owner}" if task.current_owner else "unassigned"
-            note_part = f" | {task.status_note}" if task.status_note else ""
-            open_lines.append(
-                f"  - [task:{task.status}] {task.title} ({task.task_key}): "
-                f"{owner_part}{note_part}"
-            )
-            open_lines.append(f"    Citations: {_format_citation_list(task.evidence)}")
-
-    for decision in state.decisions:
-        if decision.status in ("uncertain", "proposed"):
-            open_lines.append(
-                f"  - [decision:{decision.status}] {decision.title} ({decision.topic_key}): "
-                f"{decision.current_value}"
-            )
-            open_lines.append(f"    Citations: {_format_citation_list(decision.evidence)}")
-
-    if not open_lines:
-        parts.append("  (none)")
-    else:
-        parts.extend(open_lines)
-
-    return "\n".join(parts)
-
-
-def _format_text_output(
-    question: str,
-    chat: ParsedChat,
-    result: VerifiedAnswer,
-    adapter: BaseLLMAdapter,
-) -> str:
-    """Render a concise plain-text answer and verified evidence block."""
-    parts = [
-        f"Provider: {adapter.provider_name} ({adapter.chat_model})",
-        f"Chat lines: {chat.total_source_lines} | Messages: {len(chat.messages)} | Date order: {chat.date_order}",
-        f"Question: {question}",
-        f"Answer: {result.answer}",
-    ]
-    if result.evidence:
-        parts.append("Evidence:")
-        for item in result.evidence:
-            parts.append(f'  - {_format_evidence_ref(item)} "{item.quote}"')
-    return "\n".join(parts)
+    app = create_app(
+        chat_path,
+        provider=provider,
+        rebuild=rebuild,
+        cache_dir=cache_dir,
+        adapter_factory=adapter_factory,
+    )
+    uvicorn.run(app, host=host, port=port)
 
 
 def run_cli(
@@ -222,18 +115,72 @@ def run_cli(
     *,
     adapter_factory: Any = create_llm_adapter,
     cache_dir: Path | None = None,
+    input_fn: Any = None,
 ) -> int:
     """Execute the CLI workflow and return an exit status code."""
     parser = build_arg_parser()
     args = parser.parse_args(argv)
 
-    has_question = bool(args.question and args.question.strip())
-    if not args.state_only and not has_question:
+    has_question_arg = args.question is not None
+    if has_question_arg and not args.question.strip():
+        print("Error: --question must not be empty.", file=sys.stderr)
+        return 2
+
+    if args.web and (args.state_only or has_question_arg or args.as_json):
         print(
-            "Error: either --question or --state-only is required.",
+            "Error: --web cannot be combined with --question, --state-only, or --json.",
             file=sys.stderr,
         )
         return 2
+
+    if args.state_only and has_question_arg:
+        print(
+            "Error: --state-only cannot be combined with --question.",
+            file=sys.stderr,
+        )
+        return 2
+
+    if not args.state_only and not has_question_arg and not args.web:
+        if args.as_json:
+            print(
+                "Error: --json requires --question or --state-only.",
+                file=sys.stderr,
+            )
+            return 2
+        return run_interactive_session(
+            args.chat,
+            provider=args.provider,
+            rebuild=args.rebuild,
+            adapter_factory=adapter_factory,
+            cache_dir=cache_dir,
+            input_fn=input_fn,
+        )
+
+    if args.web:
+        if not 1 <= args.port <= 65535:
+            print("Error: --port must be between 1 and 65535.", file=sys.stderr)
+            return 2
+        try:
+            _launch_web_dashboard(
+                args.chat,
+                host=args.host,
+                port=args.port,
+                provider=args.provider,
+                rebuild=args.rebuild,
+                cache_dir=cache_dir,
+                adapter_factory=adapter_factory,
+            )
+        except (
+            FileNotFoundError,
+            ValueError,
+            LLMError,
+            genai_errors.APIError,
+            openai.OpenAIError,
+            httpx.HTTPError,
+        ) as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            return 1
+        return 0
 
     try:
         chat = parse_chat_file(args.chat)
@@ -250,9 +197,16 @@ def run_cli(
             if args.as_json:
                 print(state.model_dump_json(indent=2))
             else:
-                print(format_state_text(state, adapter, from_cache=from_cache))
+                render_project_state(
+                    create_console(),
+                    state,
+                    adapter,
+                    from_cache=from_cache,
+                    chat_path=args.chat,
+                )
             return 0
 
+        assert args.question is not None
         retriever = HybridRetriever(
             chat,
             adapter,
@@ -297,7 +251,14 @@ def run_cli(
         }
         print(json.dumps(payload, indent=2, ensure_ascii=False))
     else:
-        print(_format_text_output(args.question, chat, result, adapter))
+        render_verified_answer(
+            create_console(),
+            args.question,
+            chat,
+            result,
+            adapter,
+            retrieval=retrieval,
+        )
     return 0
 
 
