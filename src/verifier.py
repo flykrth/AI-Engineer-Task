@@ -21,8 +21,9 @@ _INCOMPLETE_TASK_STATUSES = frozenset(
     {"unconfirmed", "unassigned", "in_progress", "blocked"}
 )
 
+_SENTENCE_SPLIT_RE = re.compile(r"(?:\.(?=\s|$)|[!?;\n])+")
 _CLAUSE_SPLIT_RE = re.compile(
-    r"[.!?\n;]+|,\s*(?:but|while|however|though|whereas|and)\b",
+    r"(?:\.(?=\s|$)|[!?;\n])+|,\s*(?:but|while|however|though|whereas|and)\b",
     re.IGNORECASE,
 )
 _COMPLETION_PHRASE_RE = re.compile(
@@ -158,28 +159,47 @@ def _task_evidence_ids(task: TaskRecord) -> set[str]:
 
 def _find_matching_tasks(
     clause: str,
-    question: str,
+    *,
+    sentence_tokens: set[str],
+    prev_sentence_tokens: set[str],
+    question_tokens: set[str],
     cited_ids: set[str],
     tasks: Sequence[TaskRecord],
 ) -> list[TaskRecord]:
-    """Identify tasks targeted by a completion clause via lexical or evidence match."""
+    """Identify tasks targeted by a completion clause using scoped lexical and evidence tiers."""
     clause_tokens = _content_tokens(clause)
-    direct_matches: list[TaskRecord] = []
-    for task in tasks:
-        t_tokens = _task_tokens(task)
-        if t_tokens & clause_tokens:
-            direct_matches.append(task)
+    direct_matches = [task for task in tasks if _task_tokens(task) & clause_tokens]
     if direct_matches:
         return direct_matches
 
-    # Fall back to question tokens or cited evidence IDs when answer uses pronouns ("it is done").
-    question_tokens = _content_tokens(question)
-    indirect_matches: list[TaskRecord] = []
-    for task in tasks:
-        t_tokens = _task_tokens(task)
-        if (t_tokens & question_tokens) or (_task_evidence_ids(task) & cited_ids):
-            indirect_matches.append(task)
-    return indirect_matches
+    # Tier 2: resolve anaphora ("it is finished") against the containing or preceding sentence.
+    same_sentence_matches = [
+        task for task in tasks if _task_tokens(task) & sentence_tokens
+    ]
+    if same_sentence_matches:
+        return same_sentence_matches
+
+    prev_sentence_matches = [
+        task for task in tasks if _task_tokens(task) & prev_sentence_tokens
+    ]
+    if prev_sentence_matches:
+        return prev_sentence_matches
+
+    # Tier 3: fall back to task names mentioned in the user's question.
+    question_matches = [task for task in tasks if _task_tokens(task) & question_tokens]
+    if question_matches:
+        return question_matches
+
+    # Tier 4: only if no lexical task target exists, check task latest evidence then history.
+    latest_evidence_matches = [
+        task
+        for task in tasks
+        if ({ref.msg_id for ref in task.evidence} & cited_ids)
+    ]
+    if latest_evidence_matches:
+        return latest_evidence_matches
+
+    return [task for task in tasks if _task_evidence_ids(task) & cited_ids]
 
 
 def _quote_reports_completion(
@@ -222,26 +242,40 @@ def _detect_completion_overclaim(
         return None
 
     cited_ids = {m.msg_id for m in valid_msgs}
-    clauses = [c.strip() for c in _CLAUSE_SPLIT_RE.split(answer) if c.strip()]
-    for clause in clauses:
-        if not _phrase_asserts_completion(clause):
-            continue
-        matched_tasks = _find_matching_tasks(clause, question, cited_ids, state.tasks)
-        for task in matched_tasks:
-            if task.status not in _INCOMPLETE_TASK_STATUSES:
+    question_tokens = _content_tokens(question)
+    sentences = [s.strip() for s in _SENTENCE_SPLIT_RE.split(answer) if s.strip()]
+    prev_sentence_tokens: set[str] = set()
+
+    for sentence in sentences:
+        sentence_tokens = _content_tokens(sentence)
+        clauses = [c.strip() for c in _CLAUSE_SPLIT_RE.split(sentence) if c.strip()]
+        for clause in clauses:
+            if not _phrase_asserts_completion(clause):
                 continue
-            has_completion_evidence = any(
-                _quote_reports_completion(msg, task, state.tasks) for msg in valid_msgs
+            matched_tasks = _find_matching_tasks(
+                clause,
+                sentence_tokens=sentence_tokens,
+                prev_sentence_tokens=prev_sentence_tokens,
+                question_tokens=question_tokens,
+                cited_ids=cited_ids,
+                tasks=state.tasks,
             )
-            if not has_completion_evidence:
-                return ValidationFailure(
-                    code="completion_overclaim",
-                    message=(
-                        f"Answer asserts completion in '{clause}', but ProjectState marks "
-                        f"task '{task.title}' ({task.task_key}) as '{task.status}' and none "
-                        "of the cited messages report completion."
-                    ),
+            for task in matched_tasks:
+                if task.status not in _INCOMPLETE_TASK_STATUSES:
+                    continue
+                has_completion_evidence = any(
+                    _quote_reports_completion(msg, task, state.tasks) for msg in valid_msgs
                 )
+                if not has_completion_evidence:
+                    return ValidationFailure(
+                        code="completion_overclaim",
+                        message=(
+                            f"Answer asserts completion in '{clause}', but ProjectState marks "
+                            f"task '{task.title}' ({task.task_key}) as '{task.status}' and none "
+                            "of the cited messages report completion."
+                        ),
+                    )
+        prev_sentence_tokens = sentence_tokens
     return None
 
 

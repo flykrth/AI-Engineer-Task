@@ -137,14 +137,14 @@ _TOKEN_SYNONYMS = {
 _EXTRACTION_SYSTEM_PROMPT = """You extract chronological state changes from a window of an exported WhatsApp team chat.
 
 Rules:
-1. Extract ONLY events clearly stated in this chat window. Never invent facts, owners, or dates.
+1. Extract ONLY project-relevant events clearly stated in this chat window. Never invent facts, owners, or dates. Ignore off-topic social or personal banter (greetings, food, weather, jokes, memes, movies, or unrelated personal errands) that does not affect the team's project decisions, tasks, deadlines, or blockers.
 2. Cite ONLY exact msg_id values present in the current window (e.g. "M017"). Never invent or alter a msg_id.
 3. Resolve first-person pronouns ("I", "me", "my", "Main", "mein", "mera", "meri") to the exact sender name on that message header. Never output "Main" or "I" as an owner.
-4. Use lowercase snake_case keys (topic_key, task_key, item_key, issue_key). If an entity already appears in the Active Canonical Key Registry, REUSE that exact key instead of inventing a synonym.
+4. Use lowercase snake_case keys (topic_key, task_key, item_key, issue_key). If an entity already appears in the Active Canonical Key Registry, ALWAYS reuse that exact key when updating, replacing, or reversing it rather than inventing a new synonym or "_alternative" / "_v2" key.
 5. Decisions:
    - Use "proposed" for suggestions or one person's preference.
    - Use "confirmed" ONLY when there is explicit, unambiguous group agreement on that exact topic (e.g. "final", "agreed", "decided", "+1", or confirmed purchase).
-   - Use "reversed" when a later message replaces an earlier decision; put the NEW active choice in "value" and note what was replaced in "rationale".
+   - Use "reversed" when a later message replaces an earlier decision; put the NEW active choice in "value" and note what was replaced in "rationale". Do NOT emit a separate DecisionDelta just for a problem or failure observation unless an option is abandoned or a replacement is chosen.
    - Use "dropped" when an option is abandoned without replacement.
    - Use "uncertain" (NEVER "confirmed") when a short or playful reply (such as "obviously", "yes", "sure", or a laughing emoji reaction) immediately follows two different interleaved topics or questions from different speakers (making it ambiguous which message it answered). When one person states a preference and the only response is an ambiguous or laughing reply interleaved with another topic, classify the decision as "uncertain" (never "confirmed") and also emit an OpenIssueDelta ("opened") noting it is still unconfirmed.
 6. Tasks:
@@ -400,7 +400,26 @@ def _deduplicate_anchored_deltas(
                     "confirmed",
                     "reversed",
                 }
-                if not (same_resolved_value and both_decided):
+                same_anchor_equiv = (
+                    {prev.delta.action, item.delta.action}
+                    <= {"proposed", "confirmed", "reversed"}
+                    and prev.anchor_max == item.anchor_max
+                )
+                if not (same_resolved_value and (both_decided or same_anchor_equiv)):
+                    continue
+            elif kind == "deadline" and not same_action:
+                assert isinstance(prev.delta, DeadlineDelta) and isinstance(
+                    item.delta, DeadlineDelta
+                )
+                same_date = _norm_text_for_compare(
+                    prev.delta.date_text
+                ) == _norm_text_for_compare(item.delta.date_text)
+                same_anchor_deadline = (
+                    {prev.delta.action, item.delta.action}
+                    <= {"set", "changed", "rule_defined"}
+                    and prev.anchor_max == item.anchor_max
+                )
+                if not (same_date and same_anchor_deadline):
                     continue
             elif not same_action:
                 continue
@@ -470,8 +489,21 @@ def _merge_delta_fields(
     union_ids: tuple[str, ...],
 ) -> DecisionDelta | TaskDelta | DeadlineDelta | OpenIssueDelta:
     if isinstance(a, DecisionDelta) and isinstance(b, DecisionDelta):
+        decision_rank = {
+            "proposed": 1,
+            "uncertain": 2,
+            "dropped": 2,
+            "confirmed": 3,
+            "reversed": 4,
+        }
+        chosen_action = (
+            a.action
+            if decision_rank.get(a.action, 0) >= decision_rank.get(b.action, 0)
+            else b.action
+        )
         return a.model_copy(
             update={
+                "action": chosen_action,
                 "rationale": a.rationale or b.rationale,
                 "evidence_msg_ids": list(union_ids),
             }
@@ -485,8 +517,15 @@ def _merge_delta_fields(
             }
         )
     if isinstance(a, DeadlineDelta) and isinstance(b, DeadlineDelta):
+        deadline_rank = {"tentative": 1, "set": 2, "changed": 3, "rule_defined": 4}
+        chosen_action = (
+            a.action
+            if deadline_rank.get(a.action, 0) >= deadline_rank.get(b.action, 0)
+            else b.action
+        )
         return a.model_copy(
             update={
+                "action": chosen_action,
                 "dependency_rule": a.dependency_rule or b.dependency_rule,
                 "evidence_msg_ids": list(union_ids),
             }

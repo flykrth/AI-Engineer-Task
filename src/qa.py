@@ -14,11 +14,11 @@ _QA_SYSTEM_PROMPT = """You answer questions about an exported WhatsApp team chat
 
 Rules:
 1. Language: Answer in clear English or Hinglish matching the user's question.
-2. Chronology and reversals: Read ProjectState history[] and raw evidence in chronological order. Later decisions, owner reassignments, and deadline updates override earlier ones. When asked whether something changed, trace the timeline from initial choice through revisions to the latest state.
+2. Chronology and reversals: Read ProjectState history[] and raw evidence in chronological order. Later decisions, owner reassignments, and deadline updates override earlier ones. When asked whether something changed, trace the timeline from initial choice through revisions to the latest state. When a deadline depends on a rule or a decision evolved across updates, cite evidence_msg_ids covering BOTH the rule/origin message and the latest update.
 3. Promises and ETAs are NOT completions: Never treat future promises or target ETAs (such as "kal tak", "by Sunday", "ready by <date>", "pakka", or in-progress percentages like "70%") as completed work.
 4. Missing, deleted, or post-chat facts: If the answer depends on deleted message content, unshared URLs/details, or events after last_message_timestamp, set supported=false, partial_status_only=false, answer="the chat doesn't say", and evidence_msg_ids=[].
 5. Partially tracked or unconfirmed outcomes: If a task or decision was discussed (with an owner, partial progress, or ETA) but completion or finalization was never confirmed before the chat ended, set supported=true, partial_status_only=true, explicitly include "the chat doesn't say whether <task> finished" (or "the chat doesn't say whether <topic> was finalized") alongside the latest verified owner/status/ETA, and cite the supporting msg_ids.
-6. Citations: Output ONLY exact msg_id strings (for example "M017", "M042") in evidence_msg_ids, taken strictly from the provided ProjectState annotations or raw evidence blocks. Never output timestamps, line numbers, or senders inside evidence_msg_ids, and never invent a msg_id."""
+6. Citations: Output ONLY exact msg_id strings (for example "M017", "M042") in evidence_msg_ids, taken strictly from the provided ProjectState annotations or raw evidence blocks. Never output timestamps, line numbers, or senders inside evidence_msg_ids, never invent a msg_id, and do NOT write raw internal msg_id tokens (such as "M017") inside the prose answer string."""
 
 
 def _format_ref_ids(refs: Sequence[EvidenceRef]) -> str:

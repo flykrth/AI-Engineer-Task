@@ -706,3 +706,78 @@ def test_compiler_scaling_over_1000_lines_dedup_and_key_preservation(
     assert len(state.tasks) == 1
     assert state.tasks[0].task_key == "telemetry_link"
     assert state.tasks[0].current_owner == "Ira"
+
+
+def test_overlapping_windows_deduplicate_same_anchor_action_variants(
+    tmp_path: Path,
+) -> None:
+    lines = [
+        f"0{min(9, (i // 3) + 1)}/10/26, 10:{i:02d} AM - Alice: Message {i + 1}"
+        for i in range(10)
+    ]
+    lines[4] = "02/10/26, 10:04 AM - Alice: Use CloudHost for deployment. Decided."
+    lines[5] = "02/10/26, 10:05 AM - Bob: Final report due 23 Nov."
+    raw = "\n".join(lines)
+    chat = parse_chat_text(raw)
+
+    def responder(idx: int, prompt: str) -> WindowExtractionResult:
+        if idx == 0:
+            return WindowExtractionResult(
+                decisions=[
+                    DecisionDelta(
+                        topic_key="deployment_host",
+                        title="Deployment Host",
+                        action="confirmed",
+                        value="CloudHost",
+                        evidence_msg_ids=["M004", "M005"],
+                    )
+                ],
+                deadlines=[
+                    DeadlineDelta(
+                        item_key="report_due",
+                        title="Report due",
+                        action="set",
+                        date_text="23 Nov",
+                        evidence_msg_ids=["M006"],
+                    )
+                ],
+            )
+        # Overlap window extracts same anchor with weaker/variant action ("proposed" and "changed").
+        return WindowExtractionResult(
+            decisions=[
+                DecisionDelta(
+                    topic_key="deployment_host",
+                    title="Deployment Host",
+                    action="proposed",
+                    value="CloudHost",
+                    evidence_msg_ids=["M005"],
+                )
+            ],
+            deadlines=[
+                DeadlineDelta(
+                    item_key="report_due",
+                    title="Report due",
+                    action="changed",
+                    date_text="23 Nov",
+                    dependency_rule="3 days before demo",
+                    evidence_msg_ids=["M006"],
+                )
+            ],
+        )
+
+    adapter = ScriptedWindowAdapter(responder)
+    state = compile_project_state(
+        chat,
+        adapter,
+        raw_text=raw,
+        window_size=6,
+        overlap=2,
+        cache_dir=tmp_path / ".cache",
+    )
+    assert len(state.decisions) == 1
+    assert state.decisions[0].status == "confirmed"
+    assert len(state.decisions[0].history) == 1
+    assert len(state.deadlines) == 1
+    assert state.deadlines[0].current_date_text == "23 Nov"
+    assert state.deadlines[0].dependency_rule == "3 days before demo"
+    assert len(state.deadlines[0].history) == 1

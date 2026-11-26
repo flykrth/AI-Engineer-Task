@@ -498,3 +498,135 @@ def test_format_state_for_qa_includes_history_rules_and_msg_ids() -> None:
     assert "[M001]" in summary and "[M002]" in summary and "[M003]" in summary
     assert "dependency_rule='2 days before demo'" in summary
     assert "current_owner=unassigned | status=unassigned" in summary
+
+
+def test_multitask_swap_citation_and_version_dot_anaphora_no_false_overclaim() -> None:
+    raw = "\n".join(
+        [
+            "10/08/2026, 09:10:00 - Vikram: Task split: Ananya - scanner module, Bob - auth.",
+            "18/08/2026, 10:15:22 - Tanya: Scanner module main complete kar dungi. Ananya tum hotspot fallback dekh lena.",
+            "25/08/2026, 19:30:22 - Tanya: Scanner module done and tagged in v1.4!",
+            "06/09/2026, 16:40:00 - Ananya: Hotspot fallback ready by 13 Sep.",
+        ]
+    )
+    chat = parse_chat_text(raw)
+    refs_by_id = {
+        m.msg_id: EvidenceRef(
+            msg_id=m.msg_id,
+            line_start=m.line_start,
+            line_end=m.line_end,
+            timestamp_raw=m.timestamp_raw,
+            timestamp_iso=m.timestamp_iso,
+            sender=m.sender,
+            quote=m.text,
+        )
+        for m in chat.messages
+    }
+    state = ProjectState(
+        chat_sha256="sha-anaphora",
+        total_messages=len(chat.messages),
+        last_message_timestamp=chat.messages[-1].timestamp_raw,
+        last_message_timestamp_iso=chat.messages[-1].timestamp_iso,
+        participants=["Vikram", "Ananya", "Bob", "Tanya"],
+        tasks=[
+            TaskRecord(
+                task_key="scanner_module",
+                title="Scanner module",
+                current_owner="Tanya",
+                status="completed",
+                status_note="done and tagged in v1.4",
+                history=[
+                    StateHistoryEntry(
+                        timestamp_raw=chat.messages[1].timestamp_raw,
+                        timestamp_iso=chat.messages[1].timestamp_iso,
+                        action="reassigned",
+                        value="reassigned",
+                        owner="Tanya",
+                        evidence=[refs_by_id["M002"]],
+                    )
+                ],
+                evidence=[refs_by_id["M003"]],
+            ),
+            TaskRecord(
+                task_key="hotspot_fallback",
+                title="Hotspot fallback",
+                current_owner="Ananya",
+                status="unconfirmed",
+                status_note="ready by 13 Sep",
+                history=[
+                    StateHistoryEntry(
+                        timestamp_raw=chat.messages[1].timestamp_raw,
+                        timestamp_iso=chat.messages[1].timestamp_iso,
+                        action="assigned",
+                        value="assigned",
+                        owner="Ananya",
+                        evidence=[refs_by_id["M002"]],
+                    )
+                ],
+                evidence=[refs_by_id["M004"]],
+            ),
+        ],
+    )
+    retrieval = RetrievalResult(
+        query="scanner",
+        formatted_context="\n".join(
+            f"[{m.msg_id} | L{m.line_start}-L{m.line_end} | {m.timestamp_raw} | {m.sender}] {m.text}"
+            for m in chat.messages
+        ),
+    )
+
+    # Same-sentence and two-sentence anaphora ("it is finished and tagged in v1.4") citing M002 swap
+    # must resolve to scanner_module (completed), NOT bleed to hotspot_fallback (unconfirmed).
+    good_adapter = ScriptedDraftAdapter(
+        [
+            DraftAnswer(
+                reasoning_trace="Tanya took over scanner module in M002 and finished it in M003.",
+                supported=True,
+                partial_status_only=False,
+                answer=(
+                    "Tanya took over the scanner module from Ananya, and it is finished and tagged in v1.4. "
+                    "She completed and tagged it cleanly."
+                ),
+                evidence_msg_ids=["M002", "M003"],
+            )
+        ]
+    )
+    ok = answer_and_verify(
+        "Who took over the scanner module and is it finished?",
+        chat,
+        state,
+        retrieval,
+        good_adapter,
+    )
+    assert len(good_adapter.prompts) == 1
+    assert ok.supported is True
+    assert ok.verification_status == "verified"
+
+    # Overclaiming completion on hotspot_fallback MUST still be blocked.
+    bad_adapter = ScriptedDraftAdapter(
+        [
+            DraftAnswer(
+                reasoning_trace="Wrongly claiming hotspot fallback finished.",
+                supported=True,
+                partial_status_only=False,
+                answer="Hotspot fallback is finished by Ananya.",
+                evidence_msg_ids=["M002", "M004"],
+            ),
+            DraftAnswer(
+                reasoning_trace="Still claiming done.",
+                supported=True,
+                partial_status_only=False,
+                answer="Ananya completed hotspot fallback.",
+                evidence_msg_ids=["M004"],
+            ),
+        ]
+    )
+    blocked = answer_and_verify(
+        "Did Ananya finish hotspot fallback?",
+        chat,
+        state,
+        retrieval,
+        bad_adapter,
+    )
+    assert blocked.supported is False
+    assert blocked.verification_status == "forced_abstention:completion_overclaim"
