@@ -173,7 +173,7 @@
     els.metaMessages.textContent = `Messages: ${payload.total_messages} (${payload.total_source_lines} lines)`;
     els.metaOrder.textContent = `Date order: ${payload.date_order}`;
     els.metaLastTs.textContent = `Last message: ${payload.last_message_timestamp || "n/a"}`;
-    els.metaProvider.textContent = `Model: ${payload.provider} (${payload.model})`;
+    els.metaProvider.textContent = `Provider: ${payload.provider} (${payload.model})`;
     els.metaCache.textContent = `Source: ${payload.from_cache ? "cache" : "compiled"}`;
 
     const participants =

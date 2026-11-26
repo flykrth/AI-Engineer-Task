@@ -489,6 +489,9 @@ def run_interactive_session(
             active_console.print(Text("\nExiting interactive session.", style="dim"))
             return 0
 
+        if input_fn is None and not sys.stdin.isatty():
+            active_console.print()
+
         command = raw_input_line.strip()
         if not command:
             continue

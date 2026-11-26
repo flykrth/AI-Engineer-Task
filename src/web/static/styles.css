@@ -354,7 +354,25 @@ body {
   padding: 0.65rem;
   border-block-end: 1px solid var(--border-color);
   vertical-align: top;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+}
+
+.data-table td[data-label="Owner"],
+.data-table td[data-label="Status"],
+.data-table td[data-label="Category"],
+.data-table td[data-label="Current date"] {
+  white-space: nowrap;
+}
+
+.data-table td[data-label="Task"],
+.data-table td[data-label="Topic"],
+.data-table td[data-label="Milestone"],
+.data-table td[data-label="Item"] {
+  min-inline-size: 11.5rem;
+}
+
+.data-table td[data-label="Citations"] .citation-chip {
+  white-space: nowrap;
 }
 
 .data-table tbody tr:last-child td,
@@ -806,6 +824,12 @@ dialog::backdrop {
   .data-table tbody td {
     border-block-end: 1px solid var(--bg-subtle);
     padding: 0.35rem 0.45rem;
+    white-space: normal;
+    min-inline-size: 0;
+  }
+
+  .data-table td[data-label="Citations"] .citation-chip {
+    white-space: normal;
   }
 
   .data-table tbody td:last-child {
