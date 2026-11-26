@@ -340,7 +340,12 @@ class GeminiAdapter(BaseLLMAdapter):
                 "GEMINI_API_KEY is not set. Add GEMINI_API_KEY=... to your .env "
                 "file or environment before running with provider 'gemini'."
             )
-        self._client = genai.Client(api_key=config.api_key)
+        self._client = genai.Client(
+            api_key=config.api_key,
+            http_options=genai_types.HttpOptions(
+                timeout=max(1000, int(config.timeout_seconds * 1000))
+            ),
+        )
 
     def _is_transient_error(self, exc: Exception) -> bool:
         if isinstance(exc, genai_errors.APIError):
