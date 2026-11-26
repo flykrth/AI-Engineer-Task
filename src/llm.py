@@ -24,6 +24,10 @@ T = TypeVar("T", bound=BaseModel)
 _TRANSIENT_HTTP_CODES = {429, 502, 503, 504}
 _CODE_FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)```", re.IGNORECASE | re.DOTALL)
 _TRAILING_COMMA_RE = re.compile(r",(\s*[}\]])")
+_RETRY_HINT_RE = re.compile(
+    r"(?:retryDelay[\"']?\s*[:=]\s*[\"']?|retry\s+in\s+)(\d+(?:\.\d+)?)\s*s",
+    re.IGNORECASE,
+)
 
 
 class LLMError(RuntimeError):
@@ -53,6 +57,18 @@ class LLMConfig(BaseModel):
     timeout_seconds: float = 60.0
     max_retries: int = 3
     retry_base_delay: float = 1.0
+    request_delay_seconds: float = 0.0
+
+
+def _load_nonnegative_float_env(name: str, default: float = 0.0) -> float:
+    raw = os.getenv(name)
+    if raw is None or not raw.strip():
+        return default
+    try:
+        value = float(raw.strip())
+    except ValueError as exc:
+        raise ValueError(f"{name} must be a non-negative number, got {raw!r}.") from exc
+    return max(0.0, value)
 
 
 def load_llm_config(
@@ -69,6 +85,10 @@ def load_llm_config(
             "Supported values: gemini, openai, ollama."
         )
 
+    request_delay_seconds = _load_nonnegative_float_env(
+        "LLM_REQUEST_DELAY_SECONDS", default=0.0
+    )
+
     resolved: ProviderName = raw_provider  # type: ignore[assignment]
     if resolved == "gemini":
         return LLMConfig(
@@ -78,6 +98,7 @@ def load_llm_config(
             embed_model=(
                 os.getenv("GEMINI_EMBED_MODEL") or "gemini-embedding-001"
             ).strip(),
+            request_delay_seconds=request_delay_seconds,
         )
     if resolved == "openai":
         return LLMConfig(
@@ -87,6 +108,7 @@ def load_llm_config(
             embed_model=(
                 os.getenv("OPENAI_EMBED_MODEL") or "text-embedding-3-small"
             ).strip(),
+            request_delay_seconds=request_delay_seconds,
         )
     return LLMConfig(
         provider="ollama",
@@ -95,6 +117,7 @@ def load_llm_config(
         .rstrip("/"),
         chat_model=(os.getenv("OLLAMA_CHAT_MODEL") or "llama3.1:8b").strip(),
         embed_model=(os.getenv("OLLAMA_EMBED_MODEL") or "nomic-embed-text").strip(),
+        request_delay_seconds=request_delay_seconds,
     )
 
 
@@ -210,6 +233,7 @@ class BaseLLMAdapter(ABC):
         self.embed_model = config.embed_model
         self._sleep = sleep_fn
         self._embed_batch_size = max(1, embed_batch_size)
+        self._has_made_request = False
 
     def generate_text(
         self,
@@ -277,7 +301,31 @@ class BaseLLMAdapter(ABC):
             vectors.extend(batch_vectors)
         return vectors
 
+    @staticmethod
+    def _extract_retry_after_seconds(exc: Exception) -> float | None:
+        response = getattr(exc, "response", None)
+        headers = getattr(response, "headers", None)
+        if headers is not None and hasattr(headers, "get"):
+            raw_header = headers.get("retry-after") or headers.get("Retry-After")
+            if raw_header is not None:
+                try:
+                    return min(65.0, max(0.0, float(str(raw_header).strip())))
+                except ValueError:
+                    pass
+
+        hint_match = _RETRY_HINT_RE.search(str(exc))
+        if hint_match:
+            try:
+                return min(65.0, max(0.0, float(hint_match.group(1)) + 0.5))
+            except ValueError:
+                pass
+        return None
+
     def _call_with_retry(self, fn: Callable[[], Any]) -> Any:
+        if self._has_made_request and self.config.request_delay_seconds > 0.0:
+            self._sleep(self.config.request_delay_seconds)
+        self._has_made_request = True
+
         attempts = max(1, self.config.max_retries + 1)
         for attempt in range(attempts):
             try:
@@ -286,9 +334,11 @@ class BaseLLMAdapter(ABC):
                 is_last = attempt == attempts - 1
                 if is_last or not self._is_transient_error(exc):
                     raise
-                delay = min(
+                exp_delay = min(
                     16.0, self.config.retry_base_delay * (2**attempt)
                 )
+                hint_delay = self._extract_retry_after_seconds(exc)
+                delay = max(exp_delay, hint_delay) if hint_delay is not None else exp_delay
                 self._sleep(delay)
 
     @abstractmethod

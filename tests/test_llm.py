@@ -316,3 +316,41 @@ def test_openai_retries_on_rate_limit_error() -> None:
 
     assert adapter.generate_text("hi") == "recovered"
     assert sleep_delays == [0.5]
+
+
+def test_request_delay_pacing_and_retry_after_header(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("GEMINI_API_KEY", "fake-gemini-key")
+    monkeypatch.delenv("LLM_REQUEST_DELAY_SECONDS", raising=False)
+    default_cfg = load_llm_config(load_env=False)
+    assert default_cfg.request_delay_seconds == 0.0
+
+    monkeypatch.setenv("LLM_REQUEST_DELAY_SECONDS", "1.25")
+    paced_cfg = load_llm_config(load_env=False)
+    assert paced_cfg.request_delay_seconds == 1.25
+
+    sleep_delays: list[float] = []
+    attempts = 0
+
+    class FakeModels:
+        def generate_content(
+            self, *, model: str, contents: str, config: Any
+        ) -> SimpleNamespace:
+            nonlocal attempts
+            attempts += 1
+            if attempts == 2:
+                req = httpx.Request("POST", "https://example.com")
+                resp = httpx.Response(429, headers={"Retry-After": "4.0"}, request=req)
+                raise genai_errors.APIError(
+                    429, {"error": {"code": 429, "message": "rate limit"}}, resp
+                )
+            return SimpleNamespace(text="ok")
+
+    adapter = GeminiAdapter(
+        paced_cfg, client=SimpleNamespace(models=FakeModels()), sleep_fn=sleep_delays.append
+    )
+    assert adapter.generate_text("one") == "ok"
+    assert adapter.generate_text("two") == "ok"
+    # Pacing sleeps 1.25s before 2nd request, and 429 sleeps Retry-After=4.0s (> exp backoff 1.0s).
+    assert sleep_delays == [1.25, 4.0]
