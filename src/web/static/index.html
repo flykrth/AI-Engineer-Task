@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Team Chat Project State and Grounded Q&amp;A</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <a href="#main-content" class="skip-link visually-hidden">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="header-top">
+      <div class="header-title-group">
+        <h1>Team chat project state and Q&amp;A</h1>
+        <p class="subtitle">Chronological state extraction, ownership tracking, and citation-verified answers</p>
+      </div>
+      <div class="header-actions">
+        <button type="button" id="open-transcript-btn" class="btn btn-secondary">
+          Open transcript
+        </button>
+        <button type="button" id="rebuild-btn" class="btn btn-primary">
+          Rebuild state
+        </button>
+      </div>
+    </div>
+
+    <div class="meta-strip" id="meta-strip" aria-label="Chat and model metadata">
+      <span class="meta-pill" id="meta-file">Loading chat...</span>
+      <span class="meta-pill" id="meta-messages">Messages: -</span>
+      <span class="meta-pill" id="meta-order">Date order: -</span>
+      <span class="meta-pill" id="meta-last-ts">Last message: -</span>
+      <span class="meta-pill" id="meta-provider">Provider: -</span>
+      <span class="meta-pill" id="meta-cache">Source: -</span>
+    </div>
+    <p class="participants-line" id="meta-participants">Participants: -</p>
+    <div id="global-status" class="status-banner" role="status" aria-live="polite"></div>
+  </header>
+
+  <main id="main-content" tabindex="-1" class="workspace">
+    <section class="state-column" aria-labelledby="state-heading">
+      <div class="section-header">
+        <h2 id="state-heading">State of the project</h2>
+        <div class="summary-counts" id="summary-counts"></div>
+      </div>
+
+      <article class="card">
+        <div class="card-header">
+          <h3 id="tasks-table-heading">Tasks and ownership</h3>
+          <div class="filter-group" role="group" aria-label="Filter tasks by status">
+            <button type="button" class="filter-chip is-active" data-task-filter="all" aria-pressed="true">All</button>
+            <button type="button" class="filter-chip" data-task-filter="unassigned" aria-pressed="false">Unassigned</button>
+            <button type="button" class="filter-chip" data-task-filter="unconfirmed" aria-pressed="false">Unconfirmed</button>
+            <button type="button" class="filter-chip" data-task-filter="in_progress" aria-pressed="false">In progress</button>
+            <button type="button" class="filter-chip" data-task-filter="completed" aria-pressed="false">Completed</button>
+          </div>
+        </div>
+        <div tabindex="0" role="region" aria-labelledby="tasks-table-heading" class="table-wrapper">
+          <table class="data-table">
+            <caption class="visually-hidden">Compiled tasks, owners, status, handoff history, and citations</caption>
+            <thead>
+              <tr>
+                <th scope="col">Task</th>
+                <th scope="col">Owner</th>
+                <th scope="col">Status</th>
+                <th scope="col">Details and history</th>
+                <th scope="col">Citations</th>
+              </tr>
+            </thead>
+            <tbody id="tasks-tbody"></tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-header">
+          <h3 id="decisions-table-heading">Current decisions</h3>
+        </div>
+        <div tabindex="0" role="region" aria-labelledby="decisions-table-heading" class="table-wrapper">
+          <table class="data-table">
+            <caption class="visually-hidden">Compiled decisions, statuses, chronological reversal history, and citations</caption>
+            <thead>
+              <tr>
+                <th scope="col">Topic</th>
+                <th scope="col">Current decision</th>
+                <th scope="col">Status</th>
+                <th scope="col">History</th>
+                <th scope="col">Citations</th>
+              </tr>
+            </thead>
+            <tbody id="decisions-tbody"></tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-header">
+          <h3 id="deadlines-table-heading">Deadlines</h3>
+        </div>
+        <div tabindex="0" role="region" aria-labelledby="deadlines-table-heading" class="table-wrapper">
+          <table class="data-table">
+            <caption class="visually-hidden">Compiled deadlines, dependency rules, prior shifts, and citations</caption>
+            <thead>
+              <tr>
+                <th scope="col">Milestone</th>
+                <th scope="col">Current date</th>
+                <th scope="col">Status</th>
+                <th scope="col">Rule and shifts</th>
+                <th scope="col">Citations</th>
+              </tr>
+            </thead>
+            <tbody id="deadlines-tbody"></tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-header">
+          <h3 id="open-table-heading">Open, unassigned, or unconfirmed items</h3>
+        </div>
+        <div tabindex="0" role="region" aria-labelledby="open-table-heading" class="table-wrapper">
+          <table class="data-table">
+            <caption class="visually-hidden">Open issues, unassigned or unconfirmed tasks, and uncertain decisions</caption>
+            <thead>
+              <tr>
+                <th scope="col">Category</th>
+                <th scope="col">Item</th>
+                <th scope="col">Details</th>
+                <th scope="col">Citations</th>
+              </tr>
+            </thead>
+            <tbody id="open-tbody"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <aside class="qa-column" aria-labelledby="qa-heading">
+      <div class="card qa-card">
+        <h2 id="qa-heading">Grounded Q&amp;A</h2>
+        <p class="qa-hint">
+          Ask a question in English or Hinglish. Every answer is verified against parsed message IDs.
+        </p>
+
+        <form id="qa-form" aria-labelledby="qa-heading" novalidate>
+          <div class="field">
+            <label for="question-input">Your question</label>
+            <textarea
+              id="question-input"
+              name="question"
+              rows="3"
+              required
+              enterkeyhint="send"
+              aria-describedby="question-help question-error"
+              placeholder="Ask about decisions, ownership, deadlines, or unresolved items"
+            ></textarea>
+            <span id="question-help" class="field-help">Press Enter to submit or Shift+Enter for a new line.</span>
+            <span id="question-error" class="field-error" role="alert"></span>
+          </div>
+
+          <div class="starter-section">
+            <span class="starter-label">Starter prompts:</span>
+            <div class="starter-chips" id="starter-chips">
+              <button type="button" class="starter-chip" data-question="What decisions changed over time?">
+                What decisions changed over time?
+              </button>
+              <button type="button" class="starter-chip" data-question="Is anything unassigned?">
+                Is anything unassigned?
+              </button>
+              <button type="button" class="starter-chip" data-question="What deadlines exist?">
+                What deadlines exist?
+              </button>
+              <button type="button" class="starter-chip" data-question="What is still unconfirmed?">
+                What is still unconfirmed?
+              </button>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" id="ask-submit-btn" class="btn btn-primary">
+              Ask question
+            </button>
+          </div>
+        </form>
+
+        <div id="qa-result" class="qa-result" aria-live="polite">
+          <p class="empty-note">Submit a question to view a verified answer and clickable evidence citations.</p>
+        </div>
+
+        <section class="qa-history-section" aria-labelledby="qa-history-heading">
+          <h3 id="qa-history-heading">Recent questions</h3>
+          <ul id="qa-history-list" class="qa-history-list">
+            <li class="empty-note">No questions asked in this session yet.</li>
+          </ul>
+        </section>
+      </div>
+    </aside>
+  </main>
+
+  <dialog id="transcript-dialog" class="transcript-dialog" closedby="any" aria-labelledby="transcript-dialog-title">
+    <div class="dialog-shell">
+      <div class="dialog-header">
+        <div>
+          <h1 id="transcript-dialog-title">Chat transcript evidence</h1>
+          <p id="transcript-context-note" class="dialog-subtitle">Chronological parsed messages</p>
+        </div>
+        <button type="button" id="close-transcript-btn" class="btn btn-secondary" autofocus>
+          Close
+        </button>
+      </div>
+
+      <search class="dialog-search">
+        <label for="transcript-filter" class="visually-hidden">Filter transcript messages</label>
+        <input
+          type="search"
+          id="transcript-filter"
+          name="transcript_filter"
+          placeholder="Filter transcript by sender, message ID, or text"
+          autocorrect="off"
+          autocapitalize="none"
+          spellcheck="false"
+        >
+      </search>
+
+      <div id="transcript-list" class="transcript-list" tabindex="0"></div>
+    </div>
+  </dialog>
+
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

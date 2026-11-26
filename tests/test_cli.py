@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import json
-import sys
-import types
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
@@ -439,29 +437,6 @@ def test_run_cli_web_dispatch(
     cache_dir = tmp_path / ".cache"
 
     captured: dict[str, Any] = {}
-    stub_app = object()
-
-    stub_module = types.ModuleType("src.web.app")
-
-    def fake_create_app(
-        chat_path: Path,
-        *,
-        provider: str | None = None,
-        rebuild: bool = False,
-        cache_dir: Path | None = None,
-        adapter_factory: Any = None,
-    ) -> Any:
-        captured["create_app_args"] = {
-            "chat_path": chat_path,
-            "provider": provider,
-            "rebuild": rebuild,
-            "cache_dir": cache_dir,
-            "adapter": adapter_factory(provider=provider),
-        }
-        return stub_app
-
-    stub_module.create_app = fake_create_app  # type: ignore[attr-defined]
-    monkeypatch.setitem(sys.modules, "src.web.app", stub_module)
 
     def fake_uvicorn_run(app: Any, *, host: str, port: int) -> None:
         captured["uvicorn"] = {"app": app, "host": host, "port": port}
@@ -485,11 +460,11 @@ def test_run_cli_web_dispatch(
         cache_dir=cache_dir,
     )
     assert exit_code == 0
-    assert captured["create_app_args"]["chat_path"] == chat_file
-    assert captured["create_app_args"]["provider"] == "openai"
-    assert captured["create_app_args"]["rebuild"] is True
-    assert captured["create_app_args"]["cache_dir"] == cache_dir
-    assert captured["uvicorn"] == {"app": stub_app, "host": "0.0.0.0", "port": 8123}
+    assert fake.compiler_calls == 1
+    assert len(fake.embed_calls) == 1
+    assert captured["uvicorn"]["host"] == "0.0.0.0"
+    assert captured["uvicorn"]["port"] == 8123
+    assert captured["uvicorn"]["app"].state.runtime.chat_path == chat_file
 
 
 def test_run_cli_invalid_flag_combinations(
