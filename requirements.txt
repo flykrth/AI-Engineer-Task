@@ -65,6 +65,18 @@ jiter==0.18.0 ; python_full_version < '3.11'
     # via openai
 jiter==0.19.0 ; python_full_version >= '3.11'
     # via openai
+numpy==2.2.6 ; python_full_version < '3.11'
+    # via
+    #   rank-bm25
+    #   team-chat-qa
+numpy==2.4.6 ; python_full_version == '3.11.*'
+    # via
+    #   rank-bm25
+    #   team-chat-qa
+numpy==2.5.5 ; python_full_version >= '3.12'
+    # via
+    #   rank-bm25
+    #   team-chat-qa
 openai==3.60.0
     # via team-chat-qa
 packaging==26.4
@@ -91,6 +103,8 @@ pygments==2.21.0
 pytest==9.2.0
     # via team-chat-qa
 python-dotenv==1.2.4
+    # via team-chat-qa
+rank-bm25==0.2.2
     # via team-chat-qa
 requests==2.34.2
     # via
