@@ -1,0 +1,26 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Python virtual environments and bytecode
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Tooling and caches
+.pytest_cache/
+.cache/
+.ruff_cache/
+
+# Temporary output and evaluation artifacts
+outputs/
+eval_outputs/
+*.tmp
+*.log
+
+# OS and editor artifacts
+.DS_Store
