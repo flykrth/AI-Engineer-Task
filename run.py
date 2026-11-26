@@ -1,4 +1,4 @@
-"""Slice 1 CLI entrypoint for grounded WhatsApp team chat Q&A."""
+"""CLI entrypoint for temporal WhatsApp team chat state compilation and grounded Q&A."""
 
 from __future__ import annotations
 
@@ -13,8 +13,10 @@ import httpx
 import openai
 from pydantic import BaseModel, Field
 
+from src.compiler import compile_project_state_with_meta
 from src.llm import BaseLLMAdapter, LLMError, create_llm_adapter
 from src.parser import ParsedChat, parse_chat_file
+from src.schemas import EvidenceRef, ProjectState
 
 _SYSTEM_PROMPT = """You answer questions about an exported WhatsApp group chat.
 
@@ -86,9 +88,9 @@ def answer_question(
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
-    """Create the Slice 1 CLI argument parser."""
+    """Create the CLI argument parser."""
     parser = argparse.ArgumentParser(
-        description="Ask grounded questions about an exported WhatsApp group chat."
+        description="Compile temporal project state and answer grounded questions about an exported WhatsApp group chat."
     )
     parser.add_argument(
         "--chat",
@@ -99,8 +101,18 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--question",
         type=str,
-        required=True,
+        default=None,
         help="Question to answer from the chat.",
+    )
+    parser.add_argument(
+        "--state-only",
+        action="store_true",
+        help="Compile and display the current project state without answering a question.",
+    )
+    parser.add_argument(
+        "--rebuild",
+        action="store_true",
+        help="Force recompiling ProjectState even if a cached version exists.",
     )
     parser.add_argument(
         "--provider",
@@ -115,6 +127,141 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="Print structured JSON output instead of formatted text.",
     )
     return parser
+
+
+def _format_evidence_ref(ref: EvidenceRef) -> str:
+    """Format an EvidenceRef as [msg_id | line_ref | timestamp_raw | sender]."""
+    sender_label = ref.sender if ref.sender is not None else "system"
+    line_ref = (
+        f"L{ref.line_start}"
+        if ref.line_start == ref.line_end
+        else f"L{ref.line_start}-L{ref.line_end}"
+    )
+    return f"[{ref.msg_id} | {line_ref} | {ref.timestamp_raw} | {sender_label}]"
+
+
+def _format_citation_list(refs: list[EvidenceRef]) -> str:
+    if not refs:
+        return "[no verified citations]"
+    return ", ".join(_format_evidence_ref(ref) for ref in refs)
+
+
+def format_state_text(
+    state: ProjectState,
+    adapter: BaseLLMAdapter,
+    *,
+    from_cache: bool,
+) -> str:
+    """Render a readable plain-text 'State of the project' summary grouped by section."""
+    source_label = "cache" if from_cache else "compiled"
+    parts = [
+        "State of the project",
+        f"Provider: {adapter.provider_name} ({adapter.chat_model}) | Source: {source_label}",
+        (
+            f"Messages: {state.total_messages} | Date order: {state.date_order} | "
+            f"Last message: {state.last_message_timestamp or 'n/a'}"
+        ),
+        (
+            "Participants: "
+            + (", ".join(state.participants) if state.participants else "none")
+        ),
+        "",
+        "1. Current decisions",
+    ]
+
+    if not state.decisions:
+        parts.append("  (none)")
+    else:
+        for decision in state.decisions:
+            parts.append(
+                f"  - {decision.title} ({decision.topic_key}): "
+                f"{decision.current_value} [{decision.status}]"
+            )
+            if len(decision.history) > 1:
+                prior_chain = " -> ".join(
+                    f"{entry.value} ({entry.action}, {entry.timestamp_raw})"
+                    for entry in decision.history[:-1]
+                )
+                parts.append(f"    Prior values: {prior_chain}")
+            parts.append(f"    Citations: {_format_citation_list(decision.evidence)}")
+
+    parts.extend(["", "2. Tasks and ownership"])
+    if not state.tasks:
+        parts.append("  (none)")
+    else:
+        for task in state.tasks:
+            owner_label = task.current_owner or "unassigned"
+            note_part = f" | note: {task.status_note}" if task.status_note else ""
+            parts.append(
+                f"  - {task.title} ({task.task_key}): "
+                f"owner={owner_label} | status={task.status}{note_part}"
+            )
+            if len(task.history) > 1:
+                history_chain = " -> ".join(
+                    f"{entry.action} ({entry.owner or 'unassigned'}, {entry.timestamp_raw})"
+                    for entry in task.history
+                )
+                parts.append(f"    History: {history_chain}")
+            parts.append(f"    Citations: {_format_citation_list(task.evidence)}")
+
+    parts.extend(["", "3. Deadlines"])
+    if not state.deadlines:
+        parts.append("  (none)")
+    else:
+        for deadline in state.deadlines:
+            rule_part = (
+                f" | rule: {deadline.dependency_rule}"
+                if deadline.dependency_rule
+                else ""
+            )
+            parts.append(
+                f"  - {deadline.title} ({deadline.item_key}): "
+                f"{deadline.current_date_text} [{deadline.status}]{rule_part}"
+            )
+            if len(deadline.history) > 1:
+                prior_shifts = " -> ".join(
+                    f"{entry.value} ({entry.timestamp_raw})"
+                    for entry in deadline.history[:-1]
+                )
+                parts.append(f"    Prior shifts: {prior_shifts}")
+            parts.append(f"    Citations: {_format_citation_list(deadline.evidence)}")
+
+    parts.extend(["", "4. Open, unassigned, or unconfirmed items"])
+    open_lines: list[str] = []
+    for item in state.open_items:
+        if item.status == "resolved":
+            continue
+        owner_part = f" | owner: {item.owner}" if item.owner else ""
+        open_lines.append(
+            f"  - [issue:{item.status}] {item.title} ({item.issue_key}): "
+            f"{item.description}{owner_part}"
+        )
+        open_lines.append(f"    Citations: {_format_citation_list(item.evidence)}")
+
+    for task in state.tasks:
+        if task.status in ("unassigned", "unconfirmed", "blocked"):
+            owner_part = f"owner={task.current_owner}" if task.current_owner else "unassigned"
+            note_part = f" | {task.status_note}" if task.status_note else ""
+            open_lines.append(
+                f"  - [task:{task.status}] {task.title} ({task.task_key}): "
+                f"{owner_part}{note_part}"
+            )
+            open_lines.append(f"    Citations: {_format_citation_list(task.evidence)}")
+
+    for decision in state.decisions:
+        if decision.status in ("uncertain", "proposed"):
+            open_lines.append(
+                f"  - [decision:{decision.status}] {decision.title} ({decision.topic_key}): "
+                f"{decision.current_value}"
+            )
+            open_lines.append(f"    Citations: {_format_citation_list(decision.evidence)}")
+
+    if not open_lines:
+        parts.append("  (none)")
+    else:
+        parts.extend(open_lines)
+
+    return "\n".join(parts)
 
 
 def _format_text_output(
@@ -150,14 +297,38 @@ def run_cli(
     argv: list[str] | None = None,
     *,
     adapter_factory: Any = create_llm_adapter,
+    cache_dir: Path | None = None,
 ) -> int:
-    """Execute the Slice 1 CLI workflow and return an exit status code."""
+    """Execute the CLI workflow and return an exit status code."""
     parser = build_arg_parser()
     args = parser.parse_args(argv)
+
+    has_question = bool(args.question and args.question.strip())
+    if not args.state_only and not has_question:
+        print(
+            "Error: either --question or --state-only is required.",
+            file=sys.stderr,
+        )
+        return 2
 
     try:
         chat = parse_chat_file(args.chat)
         adapter = adapter_factory(provider=args.provider)
+        if args.state_only:
+            raw_text = args.chat.read_text(encoding="utf-8")
+            state, from_cache, _ = compile_project_state_with_meta(
+                chat,
+                adapter,
+                raw_text=raw_text,
+                cache_dir=cache_dir,
+                rebuild=args.rebuild,
+            )
+            if args.as_json:
+                print(state.model_dump_json(indent=2))
+            else:
+                print(format_state_text(state, adapter, from_cache=from_cache))
+            return 0
+
         result = answer_question(chat, args.question, adapter)
     except (
         FileNotFoundError,
