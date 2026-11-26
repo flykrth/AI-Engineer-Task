@@ -191,3 +191,34 @@ def test_empty_and_invalid_inputs() -> None:
 
     with pytest.raises(ValueError, match="No valid WhatsApp timestamp headers"):
         parse_chat_text("not a whatsapp export\njust random text\n")
+
+
+def test_parse_unseen_stress_test_fixtures() -> None:
+    fixtures_dir = Path(__file__).resolve().parent / "fixtures"
+    ios_path = fixtures_dir / "unseen_ios_24h_chat.txt"
+    noisy_path = fixtures_dir / "unseen_noisy_large_chat.txt"
+
+    ios_chat = parse_chat_file(ios_path)
+    assert 100 <= ios_chat.total_source_lines <= 130
+    assert ios_chat.date_order == "DD/MM"
+    assert ios_chat.messages[0].line_start == 1
+    assert ios_chat.messages[-1].line_end == ios_chat.total_source_lines
+    assert any(m.kind == "deleted" for m in ios_chat.messages)
+    assert any(m.kind == "media_omitted" for m in ios_chat.messages)
+    assert any(m.is_edited for m in ios_chat.messages)
+    for prev, curr in zip(ios_chat.messages, ios_chat.messages[1:]):
+        assert curr.line_start == prev.line_end + 1
+        assert curr.timestamp_iso >= prev.timestamp_iso
+
+    noisy_chat = parse_chat_file(noisy_path)
+    assert 550 <= noisy_chat.total_source_lines <= 650
+    assert 260 <= len(noisy_chat.messages) <= 330
+    assert noisy_chat.date_order == "DD/MM"
+    assert noisy_chat.messages[0].line_start == 1
+    assert noisy_chat.messages[-1].line_end == noisy_chat.total_source_lines
+    assert any(m.kind == "deleted" for m in noisy_chat.messages)
+    assert any(m.kind == "media_omitted" for m in noisy_chat.messages)
+    assert any(m.is_edited for m in noisy_chat.messages)
+    for prev, curr in zip(noisy_chat.messages, noisy_chat.messages[1:]):
+        assert curr.line_start == prev.line_end + 1
+        assert curr.timestamp_iso >= prev.timestamp_iso

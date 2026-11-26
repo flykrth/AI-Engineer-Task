@@ -1,0 +1,576 @@
+01/07/26, 9:00 AM - Messages and calls are end-to-end encrypted. No one outside of this chat, not even WhatsApp, can read or listen to them.
+01/07/26, 9:00 AM - Dev created group "RoverX Mars Challenge"
+01/07/26, 9:01 AM - Dev added you
+01/07/26, 9:05 AM - Dev: Group live ho gaya. RoverX regional qualifiers ke liye build track karte hain.
+01/07/26, 9:07 AM - Ira: Finally! Last year wali spreadsheet se toh better hi hoga.
+01/07/26, 9:09 AM - Kunal: Haan yaar, spreadsheet mein 4 log ek saath edit karte the.
+01/07/26, 9:12 AM - Sana: Workshop access mil gaya kya mechanical department se?
+01/07/26, 9:15 AM - Tarun: Haan, 5 PM to 9 PM slot allotted hai Monday to Saturday.
+01/07/26, 9:20 AM - Dev: RoverX subsystem split:
+Ira - telemetry radio link
+Kunal - autonomous waypoint nav
+Sana - power distribution PCB
+Tarun - soil moisture probe + chassis welding
+Main - battery pack assembly
+01/07/26, 9:22 AM - Ira: Telemetry radio link noted, LoRa 433MHz modules lab mein hain.
+01/07/26, 9:24 AM - Kunal: Waypoint nav ok.
+01/07/26, 9:25 AM - Sana: Power distribution PCB main KiCad pe start kar rahi hoon.
+01/07/26, 9:27 AM - Tarun: Soil probe aur chassis welding dono mil gaye, ok.
+01/07/26, 9:30 AM - Zoya: Main abhi electronics inventory audit aur documentation dekh leti hoon jab tak free hoon.
+01/07/26, 6:15 PM - Sana: Electronics lab cabinet code list:
+Cabinet A: resistors and caps
+Cabinet B: microcontrollers and cables
+Cabinet C: motor drivers and relays
+Cabinet D: batteries and chargers
+01/07/26, 10:15 PM - Tarun: Bhai kisi ne hostel laundry ka token dekha?
+01/07/26, 10:18 PM - Kunal: Reception desk pe naye tokens mil rahe kal subah.
+02/07/26, 11:10 AM - Kunal: Guys canteen mein naya masala dosa counter khula hai, try kiya?
+02/07/26, 11:12 AM - Tarun: Chutney thoda watery hai par dosa crispy hai.
+02/07/26, 11:14 AM - Zoya: <Media omitted>
+02/07/26, 11:15 AM - Zoya: Haha ye lab ke bahar kutte ka meme dekho.
+02/07/26, 3:00 PM - Tarun: Workshop locker inventory check:
+Angle grinder discs: 4 left
+Safety visor: 2 clean ones
+Metal files: flat and round
+Cutting oil bottle half full
+02/07/26, 4:30 PM - Sana: Wheel drive motor driver ka kya karna hai? Lab mein L298N driver boards pade hain 6 pieces.
+02/07/26, 4:33 PM - Dev: Prototype ke liye quick testing ho jayegi L298N se.
+02/07/26, 4:35 PM - Kunal: Agreed, motor driver ke liye L298N driver boards final for prototype.
+02/07/26, 4:38 PM - Tarun: +1 L298N, wiring easy hai.
+02/07/26, 7:15 PM - Dev: Library reference books checked out:
+Embedded C Architecture
+Modern Control Systems
+Due date 29 July
+02/07/26, 9:40 PM - Ira: Good night guys, kal 8 AM class hai.
+02/07/26, 9:42 PM - Zoya: Good night.
+03/07/26, 9:50 AM - Sana: Subah se network down hai academic block mein.
+03/07/26, 9:54 AM - Dev: Library wing mein signal aa raha hai.
+03/07/26, 6:15 PM - Dev: Competition mail update: regional qualifiers date is 30/08/26 (30 Aug).
+03/07/26, 6:17 PM - Sana: Reminder: safety inspection video is due 5 days before regional qualifiers, so 25 Aug.
+03/07/26, 6:19 PM - Ira: Noted, 25 Aug safety inspection video.
+03/07/26, 6:22 PM - Zoya: Aaj raat hostel 4 mein paani nahi aayega shayad, tank cleaning.
+03/07/26, 6:25 PM - Kunal: Bucket bhar ke rakh lo sab.
+03/07/26, 9:00 PM - Kunal: Git cheat sheet for freshers:
+git fetch origin
+git checkout -b feature-branch
+git status before commit
+never force push main
+03/07/26, 11:10 PM - Kunal: Hostel mess feedback notes:
+Monday dal too thin
+Wednesday rice overcooked
+Friday samosa best item
+Sunday halwa cold as usual
+04/07/26, 10:05 AM - Tarun: Good morning team, koi workshop aa raha hai kya?
+04/07/26, 10:12 AM - Dev: 11 baje aata hoon, soldering iron leke.
+04/07/26, 10:15 AM - Sana: Multimeter ka fuse phir ud gaya hai lab mein, new fuse chahiye.
+04/07/26, 10:18 AM - Zoya: Stationery shop ke paas se 2 fuse leke aa rahi hoon.
+04/07/26, 2:10 PM - Zoya: Lunch break mein kisi ne extra pen drive dekhi lab desk pe?
+04/07/26, 2:14 PM - Ira: Silver SanDisk mere bag mein galti se aa gayi thi, kal de dungi.
+04/07/26, 5:15 PM - Sana: Shopping list for local hardware market:
+- heat shrink tubing 4mm and 8mm
+- XT60 male/female pairs x6
+- zip ties 200mm black
+- silicone wire 12AWG red and black
+04/07/26, 8:40 PM - Kunal: Aaj ka match dekha? Last ball pe 4 run chahiye the.
+04/07/26, 8:42 PM - Ira: Bhai assignment deadline bhi aaj raat 11:59 PM hai.
+04/07/26, 8:45 PM - Kunal: Arey haan! Bhool gaya tha almost.
+05/07/26, 11:10 AM - Tarun: Hardware lab bench check:
+Oscilloscope 2 probes working
+Hot air rework gun nozzle 6mm attached
+Flux paste jar half full
+05/07/26, 1:15 PM - Zoya: Sunday mess special: cold gulab jamun.
+05/07/26, 1:18 PM - Tarun: Aur rubber paneer.
+05/07/26, 1:20 PM - Sana: <Media omitted>
+05/07/26, 1:21 PM - Sana: Mess committee complaint box photo.
+05/07/26, 4:00 PM - Kunal: Chai break at 4:30 PM?
+05/07/26, 4:03 PM - Tarun: Aata hoon 5 mins mein.
+05/07/26, 5:30 PM - Ira: Weekend reading list:
+Probabilistic Robotics ch 5
+ROS2 TF2 tutorial
+PID anti-windup article
+Kalman filter intuition notes
+05/07/26, 7:00 PM - Dev: Kal subah 8:30 AM lecture cancel ho gaya, Prof Sharma out of station.
+05/07/26, 7:02 PM - Ira: Best news of the week.
+05/07/26, 10:00 PM - Dev: Tomorrow college schedule:
+9 AM - signals lecture
+11 AM - electronics lab
+2 PM - lunch break
+5 PM - rover workshop
+06/07/26, 11:45 AM - Kunal: Printouts lene ja raha hoon CC.
+06/07/26, 3:10 PM - Tarun: Workshop cutting list for aluminum extrusions:
+4x 600mm rails
+4x 400mm crossbars
+8x corner brackets
+16x M5 T-nuts
+06/07/26, 3:14 PM - Dev: Brackets 3mm thickness wale lena, 2mm bend ho jaate hain.
+06/07/26, 3:18 PM - Tarun: Haan 3mm hi order kiye hain.
+06/07/26, 6:20 PM - Ira: Library quiet study spots:
+Floor 3 back corner has power sockets
+Floor 2 near window has strong WiFi
+Basement reading hall stays open till midnight
+06/07/26, 8:15 PM - Ira: Dinner kaun chal raha hai 8:30 pe?
+06/07/26, 8:17 PM - Dev: Aata hoon.
+06/07/26, 10:05 PM - Sana: Hostel water cooler phir kharab ho gaya.
+06/07/26, 10:08 PM - Zoya: Floor 2 wala working hai.
+07/07/26, 11:30 AM - Ira: Nescafe pe coffee peene ka plan hai 4 PM?
+07/07/26, 11:32 AM - Zoya: In!
+07/07/26, 11:33 AM - Sana: Count me in too.
+07/07/26, 2:10 PM - Kunal: Ubuntu packages installed on rover companion PC:
+ros-jazzy-desktop
+python3-serial
+can-utils
+net-tools
+07/07/26, 4:10 PM - Tarun: Borrowed tools from Mech block:
+1x vernier caliper
+1x cordless drill
+2x clamps
+Return by Saturday 4 PM
+07/07/26, 7:15 PM - Dev: Aaj ka robotics club orientation freshers ke liye accha tha.
+07/07/26, 7:18 PM - Tarun: 20 naye juniors aaye workshop dekhne.
+07/07/26, 9:00 PM - Zoya: Canteen evening snack availability:
+5 PM: samosa and kachori
+6 PM: paneer roll
+7 PM: chowmein and fried rice
+9 PM: maggi and bread omelette
+07/07/26, 9:45 PM - Kunal: Hostel WiFi pe Steam update block hai kya?
+07/07/26, 9:47 PM - Dev: Haan 9 PM ke baad throttle karte hain.
+08/07/26, 8:30 AM - Ira: Good morning! Umbrella leke nikalna aaj cloudy hai.
+08/07/26, 8:33 AM - Sana: Thanks yaar, baarish start bhi ho gayi.
+08/07/26, 2:00 PM - Sana: KiCad schematic review ke liye lab pc pe rakha hai.
+08/07/26, 2:05 PM - Dev: Check karta hoon shaam ko.
+08/07/26, 6:40 PM - Zoya: Lab cupboard shelf labels:
+Top shelf: cables and adapters
+Middle shelf: sensors and antennas
+Bottom shelf: heavy tools
+Door pocket: safety glasses
+08/07/26, 10:20 PM - Tarun: Bhai kisi ke paas extra Type-C cable hai? Hostel room 214.
+08/07/26, 10:24 PM - Kunal: Mere room se le jaa, 208.
+09/07/26, 12:15 PM - Zoya: Inventory check mein 12V buck converter 2 kam pad rahe hain.
+09/07/26, 12:18 PM - Sana: Electronic market se Saturday le aayenge.
+09/07/26, 3:20 PM - Sana: Canteen snack survey:
+Samosa price Rs 15
+Cold coffee Rs 35
+Veg grill sandwich Rs 45
+09/07/26, 5:30 PM - Ira: <Media omitted>
+09/07/26, 5:31 PM - Ira: Whiteboard pe antenna placement sketch banaya hai.
+09/07/26, 6:30 PM - Dev: Lab clean-up checklist before inspection:
+Coil oscilloscope probes
+Sweep aluminum shavings
+Store LiPo bags in steel box
+Lock tool drawer
+09/07/26, 7:45 PM - Dev: Safety reminder for workshop:
+Wear closed shoes near drill press
+Tie hair back
+Keep solder iron off when leaving
+Log every tool checkout
+09/07/26, 9:10 PM - Kunal: Movie soundtrack playlist share karo koi.
+09/07/26, 9:15 PM - Zoya: Spotify link bhejti hoon evening walk ke baad.
+10/07/26, 11:30 AM - Ira: Lab mein AC remote kahan chhupa diya kisi ne?
+10/07/26, 11:33 AM - Tarun: Whiteboard tray ke peeche rakha hai.
+10/07/26, 2:00 PM - Kunal: Linux dual boot notes for lab PC:
+Ubuntu 24.04 on partition 2
+ROS2 workspace in /opt/rover_ws
+Serial port udev rule added
+10/07/26, 6:40 PM - Tarun: Bad news on wheel motors. L298N driver boards stall load pe overheat hoke 4A pe burn ho rahe hain.
+10/07/26, 6:42 PM - Sana: Oh no, 2 boards gaye kya?
+10/07/26, 6:44 PM - Tarun: Ek board ka heatsink melt ho gaya. L298N heavy rover chassis nahi chala payega.
+10/07/26, 6:47 PM - Dev: Alternative kya hai high current ke liye?
+10/07/26, 6:50 PM - Kunal: BTS7960 43A H-bridge modules store room mein hain, current limit easily handle karega.
+10/07/26, 6:52 PM - Sana: Agreed, drop L298N completely. Final decision for motor driver: BTS7960 43A H-bridge.
+10/07/26, 6:54 PM - Dev: Confirmed, BTS7960 43A H-bridge final.
+10/07/26, 10:40 PM - Zoya: Good night team, kal workshop milte hain.
+11/07/26, 10:15 AM - Sana: Saturday morning attendance kaafi low lag rahi class mein.
+11/07/26, 10:18 AM - Kunal: Mass bunk cancel ho gaya end moment pe.
+11/07/26, 1:15 PM - Ira: Bus route detour today:
+Main road repair near clock tower
+Shuttle taking hostel backside gate
+Allow 10 extra mins
+11/07/26, 4:10 PM - Tarun: Guys ek aur problem. Soil moisture probe sensor module damaged hai aur welding mein full time lag raha hai. Soil moisture probe main nahi kar paunga, koi aur le lo please.
+11/07/26, 4:14 PM - Ira: Mera radio link aur calibration chal raha hai, full.
+11/07/26, 4:16 PM - Sana: PCB routing baaki hai abhi.
+11/07/26, 4:18 PM - Dev: Theek hai, soil moisture probe abhi unassigned rakhte hain, baad mein dekhenge.
+11/07/26, 7:15 PM - Sana: Movie theater food combo rates:
+Popcorn small Rs 120
+Cold drink Rs 90
+Combo pack Rs 180
+Nachos Rs 140
+11/07/26, 8:50 PM - Zoya: Weekend movie ka kya plan hai? Saturday evening?
+11/07/26, 8:52 PM - Kunal: 7 PM show book karte hain.
+11/07/26, 8:55 PM - Ira: Tickets 180 ke mil rahe hain student ID pe.
+12/07/26, 11:00 AM - Dev: Good morning! Aaj lab band hai kya Sunday ko?
+12/07/26, 11:05 AM - Tarun: 12 PM se 6 PM open hai guard ke paas key hai.
+12/07/26, 1:15 PM - Ira: Semester project elective options:
+Computer Vision
+Mobile Robotics
+VLSI Physical Design
+12/07/26, 3:30 PM - Zoya: Chess khelne ka mood hai kya kisi ka hostel common room mein?
+12/07/26, 3:35 PM - Dev: Shaam 6 baje aata hoon 2 games ke liye.
+12/07/26, 6:30 PM - Sana: Bench PSU safety settings:
+Max current limit 5A during first power-on
+Check polarity twice before connecting
+Keep multimeter in series for idle draw
+12/07/26, 9:15 PM - Sana: Barish shuru ho gayi phir se, hostel corridor mein paani aa raha.
+12/07/26, 9:18 PM - Zoya: Chai aur pakode mood.
+13/07/26, 12:15 PM - Tarun: Workshop safety goggles extra pair order karwa lo.
+13/07/26, 12:19 PM - Dev: Storekeeper se 4 pairs bol diye hain.
+13/07/26, 2:10 PM - Tarun: Mechanical fasteners needed later:
+M5x20 Allen bolts x20
+M5 locknuts x20
+M3 brass standoffs x12
+Spring washers x30
+13/07/26, 4:00 PM - Zoya: Stationery order arrived:
+2x whiteboard markers
+1x A4 graph pad
+3x masking tape rolls
+1x metallic sharpie
+13/07/26, 7:30 PM - Kunal: Autonomous waypoint nav kal raat tak khatam kar dunga, pakka promise.
+13/07/26, 7:32 PM - Sana: Sure Kunal, "kal raat tak" just like your lab report last semester.
+13/07/26, 7:33 PM - Kunal: Haha is baar genuinely coding start kar di hai.
+14/07/26, 10:10 AM - Ira: Koi library ja raha hai toh mera calculator le aana desk se.
+14/07/26, 10:14 AM - Zoya: Main library mein hi hoon, le aati hoon.
+14/07/26, 2:30 PM - Zoya: Lab whiteboard notes photo summary:
+Rover wheelbase 520mm
+Track width 460mm
+Ground clearance 140mm
+14/07/26, 5:45 PM - Tarun: Aluminium welding rod khatam ho gayi, workshop sir se issue karwa li.
+14/07/26, 5:48 PM - Dev: Great.
+14/07/26, 8:00 PM - Dev: Club room cleaning roster:
+Monday - Dev and Ira
+Wednesday - Sana and Zoya
+Friday - Kunal and Tarun
+14/07/26, 11:15 PM - Kunal: Midnight chai run?
+14/07/26, 11:18 PM - Tarun: Count me in, main gate ke bahar tapri.
+15/07/26, 1:00 PM - Sana: Canteen order list:
+2x cold coffee
+3x veg puff
+1x samosa plate
+2x masala tea
+15/07/26, 1:03 PM - Kunal: Mera cold coffee without sugar please.
+15/07/26, 1:05 PM - Ira: PayTM kar diya hai Sana ko.
+15/07/26, 4:30 PM - Tarun: Fasteners left in tray B:
+M3x10 bolts: 40
+M4x16 bolts: 25
+Washers: plenty
+Nyloc nuts: 18
+15/07/26, 7:00 PM - Zoya: Campus dispensary hours:
+Morning 8:30 AM to 12:30 PM
+Evening 4:00 PM to 7:00 PM
+Night emergency ambulance at gate 1
+Carry student ID
+15/07/26, 8:20 PM - Zoya: <Media omitted>
+15/07/26, 8:21 PM - Zoya: Lab cat sleeping on the soldering mat.
+15/07/26, 10:30 PM - Ira: Laptop charger overheat ho raha aaj.
+15/07/26, 10:34 PM - Sana: Extension board pe direct plug mat kar, surge protector use kar.
+16/07/26, 11:00 AM - Zoya: Notice board pe scholarship form date aayi hai.
+16/07/26, 11:04 AM - Ira: Check karti hoon break mein.
+16/07/26, 1:15 PM - Sana: Academic calendar reminders:
+Mid-sem week starts 17 Aug
+Project interim viva 22 Aug
+16/07/26, 3:10 PM - Dev: Sharing competition portal team login pin right now:
+16/07/26, 3:11 PM - Dev: This message was deleted
+16/07/26, 3:12 PM - Dev: Oops, portal team login PIN group pe nahi daalna chahiye, sirf official email pe bhejunga.
+16/07/26, 6:20 PM - Kunal: Weekend tournament fixtures:
+CS dept vs Mech dept at 4 PM
+ECE vs Civil at 5:30 PM
+Finals Sunday 6 PM
+16/07/26, 9:00 PM - Tarun: Bhai dinner ke baad badminton?
+16/07/26, 9:02 PM - Kunal: Court 2 free hoga toh aate hain.
+17/07/26, 12:30 PM - Ira: Interview shortlist mail aaya kisi ko placement cell se?
+17/07/26, 12:34 PM - Sana: Haan Friday ko aptitude round hai.
+17/07/26, 12:36 PM - Zoya: All the best guys!
+17/07/26, 2:40 PM - Dev: Library database VPN steps:
+Open campus portal
+Download OpenVPN profile
+Use roll number credentials
+Connect before opening IEEE Xplore
+17/07/26, 4:15 PM - Sana: Spare resistors sorted:
+220 ohm, 1k ohm, 10k ohm in drawer 2
+Pull-up packs labeled clearly
+Capacitor box moved to rack 3
+17/07/26, 8:45 PM - Tarun: Badminton court lights off ho gayi 8:30 pe.
+17/07/26, 8:48 PM - Kunal: Kal subah 6 AM book karte hain.
+18/07/26, 11:30 AM - Kunal: Hostel room repair ticket:
+Ceiling fan regulator buzzing
+Window latch loose
+Electrician visited at 10 AM
+18/07/26, 5:00 PM - Ira: Guys placement interviews aa gaye hain, telemetry radio link 40% done hai branch lora-packets pe. Zoya can you take over telemetry radio link?
+18/07/26, 5:04 PM - Zoya: Arre sure, main telemetry radio link le lungi. Ira tum sensor mast CAD le lena then, usme kam time lagega.
+18/07/26, 5:06 PM - Ira: Deal! Sensor mast CAD mera, telemetry radio link Zoya ka.
+18/07/26, 5:10 PM - Dev: Good swap. Update kar lo notes mein.
+18/07/26, 8:20 PM - Zoya: Rainy evening snack options:
+Maggi point open till 1 AM
+Bakery closes at 10 PM
+Tea stall open till 11:30 PM
+18/07/26, 9:50 PM - Sana: Kisi ke paas extra AA cells hain remote ke liye?
+18/07/26, 9:54 PM - Dev: Lab cabinet drawer 1 mein pack pada hai.
+19/07/26, 11:20 AM - Dev: Organizers ka circular aaya: regional qualifiers postponed to 06/09/26 (6 Sep).
+19/07/26, 11:22 AM - Sana: Toh safety inspection video deadline 1 Sep?
+19/07/26, 11:24 AM - Dev: Haan maybe 1 Sep, confirmation mail wait kar rahe.
+19/07/26, 3:30 PM - Dev: Lab AC instructions:
+Keep at 24C
+Close balcony window
+Switch off main breaker before locking door
+19/07/26, 7:15 PM - Kunal: Kisi ke paas Python serial library bug ka fix hai? Baud rate mismatch ho raha.
+19/07/26, 7:18 PM - Zoya: 115200 pe check kar aur timeout=0.1 rakh.
+19/07/26, 7:22 PM - Kunal: Worked! Thanks.
+19/07/26, 9:10 PM - Ira: Monday morning class schedule:
+8:00 AM Signals and Systems
+9:00 AM Control Engineering
+10:00 AM Digital Design
+11:00 AM Free slot
+19/07/26, 10:15 PM - Zoya: Sunday night blues, kal 8 AM quiz hai.
+19/07/26, 10:18 PM - Ira: Notes bhej diye drive folder mein.
+20/07/26, 11:15 AM - Kunal: Good morning! Library printer out of paper again.
+20/07/26, 11:18 AM - Zoya: CC lab mein print nikalwa lo, 2 rupees per page.
+20/07/26, 2:15 PM - Dev: Competition rulebook quick checks:
+Emergency kill switch must be red mushroom head
+Must be clearly accessible on top plate
+Wireless e-stop optional
+20/07/26, 6:00 PM - Tarun: Chassis welding done and load tested with 25kg weights, zero flex.
+20/07/26, 6:03 PM - Dev: Solid! Photo bhejna.
+20/07/26, 6:04 PM - Tarun: <Media omitted>
+20/07/26, 6:05 PM - Tarun: Ye welded base frame photo hai.
+20/07/26, 9:00 PM - Ira: Placement prep resources:
+DSA sheet pinned in CS group
+Embedded interview notes in club drive
+Mock HR slots Friday afternoon
+21/07/26, 10:30 AM - Sana: Good morning, power cut in Block B again.
+21/07/26, 10:35 AM - Ira: Library AC mein baith jao.
+21/07/26, 1:40 PM - Dev: Canteen mein nimbu soda accha mil raha aaj.
+21/07/26, 1:44 PM - Kunal: Dhoop bahut hai, chalta hoon.
+21/07/26, 5:45 PM - Tarun: Wheel tire tread check:
+All 4 rubber sleeves glued cleanly
+Zero wobble on test ramp
+Spare foam inserts packed
+21/07/26, 7:15 PM - Kunal: Ubuntu shortcuts I always forget:
+Ctrl+Alt+T opens terminal
+Super+L locks screen
+Ctrl+Shift+C copies in terminal
+Ctrl+R searches bash history
+21/07/26, 8:40 PM - Zoya: Aaj dinner mein chole bhature the, finally kuch dhang ka.
+21/07/26, 8:42 PM - Tarun: Main late pahuncha toh khatam ho gaye the.
+22/07/26, 11:00 AM - Tarun: Mechanical workshop mein lathe maintenance chal raha 2 PM tak.
+22/07/26, 11:05 AM - Sana: Ok, drilling evening mein karenge.
+22/07/26, 2:15 PM - Kunal: Guys hackathon registration open hua hai, koi bhar raha kya?
+22/07/26, 2:18 PM - Dev: Rover complete hone do pehle.
+22/07/26, 4:00 PM - Ira: Campus shuttle afternoon times:
+4:15 PM
+5:00 PM
+5:45 PM
+6:30 PM
+22/07/26, 6:10 PM - Zoya: Club budget receipts filed:
+Fasteners Rs 420
+Shrink wrap Rs 180
+XT60 connectors Rs 350
+Solder flux Rs 140
+22/07/26, 9:50 PM - Ira: Bus timing change ho gayi hai gate 2 se, ab 8:30 AM last morning shuttle.
+22/07/26, 9:52 PM - Sana: Thanks for heads up.
+23/07/26, 11:15 AM - Sana: Campus fest stall volunteer timings:
+Morning shift 10 to 1
+Afternoon shift 2 to 5
+Evening cleanup 5 to 6
+23/07/26, 4:00 PM - Tarun: 3D printer nozzle clog ho gaya hai mechanical lab mein.
+23/07/26, 4:05 PM - Dev: Brass nozzle spare drawer mein rakha hai.
+23/07/26, 4:09 PM - Tarun: Mil gaya, swap kar raha hoon.
+23/07/26, 7:45 PM - Sana: Hostel washing machine rules:
+Max load 6 kg
+Empty pockets before wash
+Clean lint filter after cycle
+Do not leave clothes overnight
+23/07/26, 9:20 PM - Ira: Sabne quiz submit kar diya kya?
+23/07/26, 9:22 PM - Zoya: Haan 8:55 PM ko hi done.
+24/07/26, 10:15 AM - Sana: Good morning guys.
+24/07/26, 10:18 AM - Dev: Morning!
+24/07/26, 2:00 PM - Ira: Hostel parcel desk rules:
+Pick up before 8 PM
+Show student ID card
+Weekend counter closed Sunday
+24/07/26, 5:20 PM - Kunal: BIG UPDATE! Alumni lab donation box mein 4x VESC 6.0 CAN controllers nikle hain working condition mein.
+24/07/26, 5:22 PM - Sana: Wait really?! VESC 6.0 supports CAN telemetry and regenerative braking.
+24/07/26, 5:25 PM - Kunal: Haan bench test kiya, smooth FOC torque control aa raha.
+24/07/26, 5:27 PM - Tarun: Toh BTS7960 H-bridge hata dein?
+24/07/26, 5:29 PM - Dev: Haan, scrap BTS7960. Final motor controller decision: VESC 6.0 CAN controllers. Main VESC firmware tuning handle kar lunga.
+24/07/26, 5:31 PM - Sana: Awesome! Power board connector layout uske hisaab se adjust kar deti hoon.
+24/07/26, 10:00 PM - Tarun: Alumni wale sir bahut helpful the.
+24/07/26, 10:03 PM - Kunal: Haan next month demo dekhne aayenge bol rahe the.
+25/07/26, 10:30 AM - Tarun: Workshop drill bit box inventory:
+3mm HSS: 2
+4mm HSS: 3
+5mm HSS: 1
+6mm HSS: 2
+25/07/26, 1:10 PM - Kunal: Sorry guys waypoint nav delayed ho gaya interview prep mein. By Monday evening pakka finish kar dunga.
+25/07/26, 1:15 PM - Dev: Monday tak ho jana chahiye, testing wait kar rahi hai.
+25/07/26, 4:45 PM - Ira: Nescafe cold coffee price 10 rupaye badh gaya.
+25/07/26, 4:48 PM - Zoya: Inflation hit campus hard.
+25/07/26, 6:40 PM - Dev: Tool checkout log reminder:
+Write name and time in register
+Do not leave multimeter probes tangled
+Return battery chargers before 9 PM
+25/07/26, 7:45 PM - Zoya: Railway station auto fare guide:
+Shared auto Rs 25 per person
+Reserved auto Rs 120
+Campus e-rickshaw Rs 15 to gate
+Night rate adds Rs 30
+25/07/26, 9:30 PM - Zoya: Koi maggi bana raha hai kya night canteen mein?
+25/07/26, 9:32 PM - Tarun: 20 mins mein milte hain wahan.
+26/07/26, 11:20 AM - Tarun: Sunday cricket ground wet hai kal ki baarish se.
+26/07/26, 11:24 AM - Kunal: Table tennis khel lete hain SAC mein.
+26/07/26, 4:40 PM - Sana: Soil moisture probe ka kya hua? Abhi bhi unassigned hai aur koi nahi le raha.
+26/07/26, 4:43 PM - Zoya: Mere paas telemetry radio link hai, main nahi le paungi.
+26/07/26, 4:45 PM - Kunal: Autonomous nav heavy chal raha hai already.
+26/07/26, 4:48 PM - Dev: Ok, Friday 7 Aug lab review ke agenda mein daal dete hain: soil moisture probe kaun karega.
+26/07/26, 7:20 PM - Kunal: Campus WiFi proxy settings changed:
+Switch to direct mode on student subnet
+Restart NetworkManager if DNS stalls
+Portal login renews every 12h
+26/07/26, 9:40 PM - Ira: Good night everyone.
+27/07/26, 11:00 AM - Ira: Good morning! Aaj lab mein soldering fume extractor laga diya hai.
+27/07/26, 11:04 AM - Sana: Finally, aankhein jalna band hongi.
+27/07/26, 1:00 PM - Zoya: Team t-shirt size list for fest:
+Dev: L
+Ira: M
+Kunal: L
+Sana: S
+Tarun: XL
+Zoya: M
+27/07/26, 3:20 PM - Kunal: Anyone near main gate? Parcel pick kar lena mera.
+27/07/26, 3:23 PM - Zoya: OTP bhej de, main wahi hoon.
+27/07/26, 5:00 PM - Tarun: Paint spray booth booking:
+Reserved 4 PM tomorrow
+Matte black primer coat for brackets
+Masking tape already packed
+27/07/26, 7:10 PM - Ira: Notes shared on drive folder:
+Lecture 1 to 6 slides
+Previous year mid-sem papers
+Tutorial 2 solutions
+Formula summary sheet
+27/07/26, 8:15 PM - Tarun: Bhai kisi ke paas M4 nylon locknuts hain?
+27/07/26, 8:18 PM - Dev: Box 3 mein 50 pieces hain.
+28/07/26, 3:00 PM - Zoya: Official organizer correction mail: 6 Sep was a tentative slot, confirmed regional qualifiers date is 04/09/26 (4 Sep).
+28/07/26, 3:02 PM - Dev: Ok so 4 Sep final for regional qualifiers.
+28/07/26, 3:05 PM - Sana: Toh safety inspection video due 30 Aug (5 days before 4 Sep).
+28/07/26, 3:07 PM - Zoya: Yes, 30 Aug confirmed for safety inspection video.
+28/07/26, 7:45 PM - Ira: Midnight canteen menu update:
+Added cheese toast
+Cold coffee machine repaired
+Bun maska back in stock
+28/07/26, 9:15 PM - Tarun: Lab mein mosquito coil jalani padegi shaam ko.
+28/07/26, 9:18 PM - Sana: Windows pe mesh lagwa dete hain guard ko bolke.
+29/07/26, 10:30 AM - Dev: Good morning! Mid-sem timetable draft mail pe aaya.
+29/07/26, 10:34 AM - Ira: Two exams same day pad rahe hain, CR ko bolna padega.
+29/07/26, 1:15 PM - Kunal: Gym timings changed for August:
+Morning 6 AM to 9 AM
+Evening 4:30 PM to 8:30 PM
+29/07/26, 3:30 PM - Sana: Oscilloscope probe check:
+Channel 1 probe calibrated
+Channel 2 clip spring replaced
+Ground alligator leads packed
+29/07/26, 6:45 PM - Kunal: <Media omitted>
+29/07/26, 6:46 PM - Kunal: Rover sticker meme banaya hai Zoya ne.
+29/07/26, 6:48 PM - Zoya: Haha print karwayenge toolbox ke liye.
+29/07/26, 7:15 PM - Dev: Soldering tips for XT60 plugs:
+Plug mating connector so pins stay aligned
+Pre-tin wire and cup separately
+Use 400C iron tip
+Slide heat shrink before soldering
+30/07/26, 1:20 PM - Ira: Canteen mein momos counter bhi aa gaya aaj.
+30/07/26, 1:24 PM - Tarun: Evening lab ke baad test karte hain momos.
+30/07/26, 5:15 PM - Dev: Shipping crate dimensions for travel:
+Length 85 cm
+Width 65 cm
+Height 50 cm
+Side carry handles bolted
+30/07/26, 9:00 PM - Zoya: Momos chutney super spicy thi aaj.
+30/07/26, 9:03 PM - Ira: Mera paani khatam ho gaya khate khate.
+31/07/26, 11:30 AM - Kunal: Lab computer 4 ka mouse scroll wheel kaam nahi kar raha.
+31/07/26, 11:33 AM - Tarun: Drawer mein wireless mouse rakha hai.
+31/07/26, 3:00 PM - Dev: Spare battery charger notes:
+Use balance plug every time
+Charge rate capped at 2A indoor
+31/07/26, 7:10 PM - Sana: Power distribution PCB soldered, voltage rails verified, done!
+31/07/26, 7:12 PM - Dev: Clean work Sana.
+31/07/26, 8:20 PM - Tarun: Wheel suspension bolt torque log:
+Front left rocker arm checked
+Front right rocker arm checked
+Rear bogie pivot checked
+Loctite blue applied on all pivots
+31/07/26, 9:40 PM - Zoya: Packing tape and foam sheets:
+2 rolls bubble wrap in store room
+Enough for travel crate padding
+Corner foam bumpers saved
+01/08/26, 10:00 AM - Zoya: Good morning team! August aa gaya.
+01/08/26, 10:05 AM - Ira: Sem exams ke dates bhi aane wale hain.
+01/08/26, 2:10 PM - Kunal: Git branch cleanup reminder:
+Keep main clean
+Push experimental scripts to feature branches
+Tag stable hardware tests
+01/08/26, 6:40 PM - Sana: Weekend ghar kaun kaun ja raha hai?
+01/08/26, 6:43 PM - Zoya: Main toh campus pe hi hoon.
+01/08/26, 6:45 PM - Tarun: Main bhi yahin hoon.
+02/08/26, 11:20 AM - Ira: Subah campus walk mein peacock dikha library lawn pe.
+02/08/26, 11:23 AM - Dev: <Media omitted>
+02/08/26, 11:24 AM - Dev: Ye pichle week ki photo thi wahi garden wali.
+02/08/26, 3:15 PM - Tarun: Tool kit bag packed for transport:
+Allen keys metric set
+Wire stripper and crimper
+Multimeter and spare fuses
+Zip ties and electrical tape
+02/08/26, 5:30 PM - Tarun: Workshop key guard room mein wapas rakh di hai.
+02/08/26, 7:15 PM - Ira: Evening walk route around lake:
+Gate 3 lights repaired
+Much brighter now after 7 PM
+Jogging track dry again
+02/08/26, 8:30 PM - Kunal: Demo video shooting spots on campus:
+SAC gravel patch for slope test
+Football ground sideline for range test
+Main academic lawn for stairs demo
+Avoid 5 PM crowd near canteen
+03/08/26, 10:15 AM - Kunal: Good morning! Hostel breakfast mein poha tha aaj.
+03/08/26, 10:18 AM - Zoya: Rare W from mess.
+03/08/26, 2:40 PM - Tarun: Spare wheel hubs machined:
+2 extra aluminum hubs ready
+Kept in crate pocket
+Set screws bagged separately
+03/08/26, 6:15 PM - Dev: 4S LiFePO4 battery pack assemble kar raha hoon, 10 Aug tak ready ho jayega.
+03/08/26, 6:18 PM - Sana: Battery fuse 60A inline lagana mat bhoolna.
+03/08/26, 6:20 PM - Dev: Haan 60A ANL fuse already soldered.
+03/08/26, 9:40 PM - Ira: Koi guitar leke baitha hai rooftop pe?
+03/08/26, 9:43 PM - Tarun: Third year wale senior hain.
+04/08/26, 10:15 AM - Ira: Hostel mess rebate form:
+Fill 3 days prior before travel
+Get warden signature before Friday
+04/08/26, 12:15 PM - Sana: Lab attendance sheet sign karke jana sab.
+04/08/26, 12:18 PM - Kunal: Haan main 3 PM jaake sign kar dunga.
+04/08/26, 4:30 PM - Sana: Lab safety audit checklist:
+First aid box restocked
+Fire extinguisher tag valid till Dec
+Emergency cutoff switch tested
+04/08/26, 6:15 PM - Zoya: First aid kit items verified:
+Bandages and antiseptic wipes
+Burn gel tube
+Cotton gauze roll
+Pain relief spray
+04/08/26, 8:00 PM - Zoya: Telemetry radio link done and range tested cleanly at 400m across football ground.
+04/08/26, 8:03 PM - Ira: Awesome Zoya! Sensor mast CAD bhi done hai, STEP and STL files exported.
+04/08/26, 8:05 PM - Dev: Nice progress both of you.
+04/08/26, 10:30 PM - Zoya: Good night guys, kal milte hain.
+05/08/26, 9:15 AM - Ira: Good morning, coffee run before 10 AM lab?
+05/08/26, 9:18 AM - Sana: On my way!
+05/08/26, 1:15 PM - Zoya: Travel train booking check:
+Confirm student concession forms
+Submit at admin window before 4 PM
+Carry 2 passport photos
+05/08/26, 2:45 PM - Sana: Lab review snacks volunteer list:
+Sana bringing biscuits
+Ira bringing cold water bottles
+Tarun bringing paper cups
+Zoya bringing chips
+05/08/26, 4:30 PM - Kunal: Rover max competition weight limit is 18 kg including battery <This message was edited>
+05/08/26, 5:10 PM - Kunal: Autonomous waypoint nav update: PID tuning 65% done, obstacle avoidance bacha hai.
+05/08/26, 5:12 PM - Dev: Noted. VESC firmware tuning abhi bench calibration pe hai.
+05/08/26, 6:00 PM - Dev: Friday 07/08/26 ko 5 PM lab review rakhte hain, Robotics Lab 2. Agenda: soil moisture probe ownership + battery pack check.
+05/08/26, 6:02 PM - Sana: I'm in.
+05/08/26, 6:03 PM - Zoya: Coming.
+05/08/26, 6:04 PM - Ira: Present.
+05/08/26, 6:05 PM - Tarun: Haan aa jaunga.
+05/08/26, 6:07 PM - Kunal: Online join karunga shaam ko.

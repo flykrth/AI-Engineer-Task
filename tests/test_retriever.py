@@ -391,3 +391,66 @@ def test_graceful_bm25_fallback_on_index_and_query_embedding_failures(
     assert res3.dense_fallback is True
     assert "Query embedding rate limited" in (res3.dense_fallback_reason or "")
     assert any("M006" in b.msg_ids for b in res3.blocks)
+
+
+def test_retriever_scaling_over_1000_lines_bm25_and_rrf(tmp_path: Path) -> None:
+    from datetime import datetime, timedelta
+    import time
+
+    start_dt = datetime(2026, 7, 1, 9, 0)
+    lines: list[str] = []
+    for idx in range(1, 1051):
+        ts = (start_dt + timedelta(minutes=idx * 30)).strftime("%d/%m/%y, %I:%M %p")
+        sender = ["Dev", "Ira", "Kunal", "Sana"][idx % 4]
+        if idx == 540:
+            lines.append(f"{ts} - {sender}: Buried ESC reversal: switched to VESC_6_CAN module.")
+            lines.append("Old driver thermal issue resolved.")
+        elif idx == 1046:
+            lines.append(f"{ts} - {sender}: Final tail status: obstacle avoidance still remaining.")
+        else:
+            lines.append(f"{ts} - {sender}: Regular lab chatter line {idx} about snacks and schedule.")
+
+    raw = "\n".join(lines)
+    chat = parse_chat_text(raw)
+    assert chat.total_source_lines >= 1050
+    assert len(chat.messages) == 1050
+
+    def embed_fn(texts: list[str]) -> list[list[float]]:
+        vecs: list[list[float]] = []
+        for t in texts:
+            if "VESC_6_CAN" in t or "vesc" in t.lower():
+                vecs.append([1.0, 0.1])
+            else:
+                vecs.append([0.1, 1.0])
+        return vecs
+
+    t0 = time.perf_counter()
+    adapter = MockEmbeddingAdapter(embed_fn)
+    retriever = HybridRetriever(
+        chat,
+        adapter,
+        raw_text=raw,
+        chunk_size=6,
+        stride=3,
+        cache_dir=tmp_path / ".cache",
+    )
+    result = retriever.retrieve(
+        "Which ESC VESC_6_CAN module did the team switch to?",
+        top_k=5,
+        expand_n=3,
+        include_tail=True,
+        tail_size=5,
+    )
+    elapsed = time.perf_counter() - t0
+
+    assert elapsed < 5.0
+    assert len(retriever.chunks) > 300
+    assert result.used_dense is True
+    assert result.dense_fallback is False
+    # Check batching (349 chunks / 64 batch size = 6 index batches + 1 query call = 7 calls).
+    assert len(adapter.embed_calls) >= 6
+    all_block_ids = [mid for b in result.blocks for mid in b.msg_ids]
+    assert len(all_block_ids) == len(set(all_block_ids))
+    assert "M540" in all_block_ids
+    assert "M1046" in all_block_ids
+    assert len(result.blocks) <= 6

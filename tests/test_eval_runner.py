@@ -23,6 +23,7 @@ from src.schemas import (
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TEAM_CHAT_EVAL_PATH = REPO_ROOT / "eval" / "team_chat_eval.json"
+UNSEEN_EVAL_PATH = REPO_ROOT / "eval" / "unseen_eval.json"
 
 
 class MockEvalAdapter(BaseLLMAdapter):
@@ -93,17 +94,17 @@ class MockEvalAdapter(BaseLLMAdapter):
 
 
 def test_team_chat_eval_suite_schema_and_hygiene() -> None:
-    raw = TEAM_CHAT_EVAL_PATH.read_text(encoding="utf-8")
-    assert "\u2014" not in raw
-    data = json.loads(raw)
-    questions = data["questions"]
-    assert len(questions) == 15
-    assert [q["id"] for q in questions] == [f"Q{i}" for i in range(1, 16)]
-    for q in questions:
-        chat_path = REPO_ROOT / q["chat_file"]
-        assert chat_path.is_file()
-        assert q["question"].strip()
-        assert q["expected_answer"].strip()
+    for path, expected_count in ((TEAM_CHAT_EVAL_PATH, 15), (UNSEEN_EVAL_PATH, 10)):
+        raw = path.read_text(encoding="utf-8")
+        assert "\u2014" not in raw
+        data = json.loads(raw)
+        questions = data["questions"]
+        assert len(questions) == expected_count
+        for q in questions:
+            chat_path = REPO_ROOT / q["chat_file"]
+            assert chat_path.is_file()
+            assert q["question"].strip()
+            assert q["expected_answer"].strip()
 
 
 def test_run_evaluation_full_and_state_only_with_mock_adapter(tmp_path: Path) -> None:

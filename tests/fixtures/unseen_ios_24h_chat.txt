@@ -1,0 +1,114 @@
+‎[10/08/2026, 09:00:12] ‎Messages and calls are end-to-end encrypted. No one outside of this chat, not even WhatsApp, can read or listen to them.
+‎[10/08/2026, 09:00:15] ‎Ananya created group "FestPass Check-in Team"
+‎[10/08/2026, 09:00:20] ‎Ananya added you
+[10/08/2026, 09:02:10] Ananya: Hey team, annual tech fest ke liye FestPass check-in kiosk banana hai.
+[10/08/2026, 09:03:05] Vikram: Main ready hoon. Gate entry QR scan aur badge print fast hona chahiye.
+[10/08/2026, 09:04:40] Neha: Badge printing ka hardware finalize karna padega pehle.
+[10/08/2026, 09:05:18] Siddharth: Tablet browser se direct thermal printer chalega kya?
+[10/08/2026, 09:06:30] Neha: Bluetooth thermal SDK (escpos-bt) try karte hain, simple setup hai.
+[10/08/2026, 09:07:12] Vikram: Agreed, Bluetooth thermal SDK (escpos-bt) use karte hain for badge printing.
+[10/08/2026, 09:08:00] Tanya: +1 escpos-bt.
+[10/08/2026, 09:10:00] Vikram: Task division finalized:
+Ananya - QR scanner module
+Neha - badge printer driver
+Siddharth - volunteer roster sync
+Tanya - kiosk offline cache
+I - check-in analytics dashboard
+[10/08/2026, 09:11:15] Ananya: Done, QR scanner mera.
+[10/08/2026, 09:12:04] Neha: Okay, printer driver main dekh lungi.
+[10/08/2026, 09:12:45] Tanya: Got it, offline cache main kar lungi.
+[10/08/2026, 09:13:20] Siddharth: Volunteer roster sync noted.
+[11/08/2026, 14:20:00] Ananya: Reminder: fest opening ceremony is 18/09/2026 (18 Sep).
+[11/08/2026, 14:21:10] Vikram: Kiosk dry run must happen 4 days before opening ceremony, so dry run is 14 Sep.
+[11/08/2026, 14:22:05] Tanya: Noted, 14 Sep dry run.
+[12/08/2026, 18:45:33] Neha: Guys hall mein test kiya, escpos-bt Bluetooth pairing keeps dropping when 10 phones are nearby.
+[12/08/2026, 18:47:12] Ananya: Then demo mein fail ho jayega. Alternative?
+[12/08/2026, 18:48:40] Neha: USB OTG thermal bridge (usb-spooler) wired hai, zero drop.
+[12/08/2026, 18:49:55] Vikram: Final: drop escpos-bt, switch badge printing to USB OTG thermal bridge (usb-spooler).
+[13/08/2026, 21:10:00] Siddharth: Rain bahut tez hai hostel ke paas, power cut ho gaya.
+[13/08/2026, 21:12:30] Ananya: Laptop battery save karo yaar.
+[14/08/2026, 11:15:20] Siddharth: Good morning! Canteen samosas anyone?
+[14/08/2026, 11:16:02] Tanya: Subah subah samosa nahi yaar, coffee le aao.
+[14/08/2026, 11:18:10] Neha: Mere liye ek cold coffee please.
+[15/08/2026, 16:30:11] Ananya: QR scanner module 75% done on branch qr-v2, batch camera mode works.
+[15/08/2026, 16:32:00] Vikram: Nice speed!
+[15/08/2026, 19:00:05] Siddharth: Bad news. Cultural committee pulled me into stage lighting duty, volunteer roster sync main nahi kar paunga. Koi aur le lo please.
+[15/08/2026, 19:02:18] Ananya: Main already QR scanner aur AV coordination mein hoon.
+[15/08/2026, 19:03:44] Neha: Printer driver plus cable testing chal raha hai, full.
+[15/08/2026, 19:05:10] Vikram: Ok, volunteer roster sync ko baad mein dekhte hain.
+[16/08/2026, 10:00:00] Neha: Good morning team.
+[16/08/2026, 10:05:15] Vikram: Morning!
+[16/08/2026, 20:15:00] Tanya: Gate A power strip checklist:
+2x 6-socket surge boards
+1x 10m extension drum
+[17/08/2026, 19:40:00] Siddharth: Koi cricket match dekh raha hai kya?
+[17/08/2026, 19:41:20] Vikram: Last 4 overs dekhte hain mess TV pe.
+[18/08/2026, 10:12:40] Ananya: Cultural team ne mujhe full-time stage AV de diya. Tanya can you take over QR scanner module from branch qr-v2 (75% done)?
+[18/08/2026, 10:15:22] Tanya: Theek hai, QR scanner module main complete kar dungi. Ananya tum WiFi hotspot fallback dekh lena if time mile.
+[18/08/2026, 10:16:30] Ananya: Deal, WiFi hotspot fallback main handle kar lungi.
+[19/08/2026, 22:30:00] Tanya: Mess mein aaj paneer bana hai surprisingly.
+[19/08/2026, 22:31:10] Siddharth: Fake news, sirf gravy hogi.
+[20/08/2026, 20:05:14] Neha: Sending thermal printer error log photo
+‎[20/08/2026, 20:05:18] ‎Neha: ‎image omitted
+[20/08/2026, 20:06:02] Neha: Paper jam sensor pin loose tha, soldered and fixed now.
+[21/08/2026, 15:40:00] Vikram: Coordinator mail aaya: opening ceremony shifted to 22/09/2026 (22 Sep).
+[21/08/2026, 15:41:12] Tanya: Toh kiosk dry run 18 Sep?
+[21/08/2026, 15:42:00] Vikram: Yes probably 18 Sep.
+[22/08/2026, 12:10:09] Siddharth: Wait, USB OTG only allows one tablet per printer. We have 3 check-in counters!
+[22/08/2026, 12:12:30] Siddharth: Tested WiFi CUPS print server on Raspberry Pi: prints 2x faster and all 3 tablets share one queue.
+[22/08/2026, 12:14:45] Neha: Wait really? Let me check queue latency.
+[22/08/2026, 12:25:10] Neha: Confirmed, WiFi CUPS print server is super stable. Scrap usb-spooler.
+[22/08/2026, 12:26:00] Vikram: Agreed, final badge printing decision: WiFi CUPS print server (replacing usb-spooler).
+[23/08/2026, 14:00:00] Ananya: Anyone free for tea at Nescafe?
+[23/08/2026, 14:02:10] Neha: On my way in 5 mins.
+[23/08/2026, 19:30:00] Siddharth: Auditorium booking list updated:
+Main hall: 10 AM to 6 PM
+Lobby registration desk: 8 AM onwards
+[24/08/2026, 17:00:15] Vikram: We need 12 check-in tablets for Gate A and Gate B <This message was edited>
+[25/08/2026, 19:30:22] Tanya: QR scanner module done and tagged in v1.4!
+[25/08/2026, 19:31:05] Vikram: Awesome, thanks Tanya!
+[26/08/2026, 16:20:00] Siddharth: Lab WiFi aaj super slow chal raha hai.
+[26/08/2026, 16:21:40] Tanya: Hotspot se push kar le.
+[27/08/2026, 13:15:40] Ananya: Correction from dean office: 22 Sep clashes with convocation rehearsal. Final opening ceremony date is 21/09/2026 (21 Sep).
+[27/08/2026, 13:16:30] Vikram: Got it, 21 Sep final for opening ceremony.
+[27/08/2026, 13:17:15] Tanya: So kiosk dry run is 17 Sep (4 days before 21 Sep).
+[27/08/2026, 13:18:00] Ananya: Correct, dry run 17 Sep.
+[28/08/2026, 18:10:00] Neha: Placement cell orientation kitne baje hai kal?
+[28/08/2026, 18:12:30] Tanya: 4 PM main auditorium mein.
+[29/08/2026, 21:10:00] Vikram: Uploading the admin WiFi password for the CUPS Pi right now
+[29/08/2026, 21:11:15] Vikram: ‎You deleted this message
+[29/08/2026, 21:12:00] Vikram: Wait, security team said don't post passwords on WhatsApp, will share in person.
+[30/08/2026, 20:00:00] Vikram: Weekend pe match dekhne chaloge?
+[30/08/2026, 20:02:15] Siddharth: Assignment submit karke aata hoon.
+[31/08/2026, 11:00:00] Ananya: Good morning! Lab keys guard ke paas rakh di hain.
+[31/08/2026, 11:03:00] Neha: Noted, dopahar mein le leti hoon.
+[01/09/2026, 18:00:30] Neha: Badge printer driver for WiFi CUPS done and tested with Gate A printer.
+[02/09/2026, 20:15:10] Tanya: Kiosk offline cache 50% tested, IndexedDB quota check remaining.
+[03/09/2026, 11:00:05] Vikram: Analytics dashboard kal tak khatam kar dunga, promise.
+[03/09/2026, 11:01:20] Neha: Sure Vikram, "kal tak" just like last week.
+[04/09/2026, 09:30:00] Neha: Good morning! Lab slot 2 PM booked hai.
+[04/09/2026, 09:31:20] Ananya: Great, milte hain.
+[04/09/2026, 15:15:00] Siddharth: Lab locker key guard room se le lena.
+[05/09/2026, 22:10:45] Vikram: Sorry guys, analytics dashboard pending hai abhi, I will finish by 12 Sep.
+[06/09/2026, 16:40:00] Ananya: WiFi hotspot fallback setup ready by 13 Sep, testing SIM router tomorrow.
+[06/09/2026, 20:45:00] Siddharth: Mess mein aaj ice cream cup mila dinner ke baad.
+[06/09/2026, 20:47:00] Tanya: Rare event!
+[07/09/2026, 13:45:00] Tanya: Lunch break ke baad test karte hain.
+[07/09/2026, 13:46:10] Neha: Sure.
+[08/09/2026, 17:05:10] Tanya: Volunteer roster sync abhi bhi unassigned hai kya?
+[08/09/2026, 17:06:22] Siddharth: Haan koi nahi le raha abhi tak.
+[08/09/2026, 17:07:30] Vikram: Let's assign volunteer roster sync in the 14 Sep planning call.
+[09/09/2026, 19:20:00] Neha: Gate pass sticker design ke liye 2 drafts bheje hain:
+‎[09/09/2026, 19:20:12] ‎Neha: ‎image omitted
+[09/09/2026, 19:21:05] Tanya: Vikram, 14 Sep call 5 PM pe hai na?
+[09/09/2026, 19:21:30] Siddharth: First draft neon border wala clean lag raha.
+[09/09/2026, 19:22:00] Vikram: Haan bilkul.
+[10/09/2026, 10:15:00] Ananya: Good morning! Almost final sprint week.
+[10/09/2026, 10:18:00] Neha: Morning, coffee needed ASAP.
+[10/09/2026, 21:05:00] Tanya: Quick checklist for dry run:
+- verify barcode fallback
+- pack extension cords
+- bring backup thermal rolls
+[10/09/2026, 21:06:12] Neha: Thermal rolls 6 boxes already in lab locker 3.
+[10/09/2026, 21:07:00] Vikram: Noted, see you all after classes tomorrow.
+[10/09/2026, 21:10:00] Ananya: Good night everyone, catch up tomorrow.

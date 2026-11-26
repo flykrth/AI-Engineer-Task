@@ -1,0 +1,169 @@
+{
+  "suite_name": "unseen_stress_10q",
+  "description": "10 hand-worked questions spanning unseen_ios_24h_chat.txt (FestPass kiosk) and unseen_noisy_large_chat.txt (RoverX robotics build).",
+  "default_chat_file": "tests/fixtures/unseen_ios_24h_chat.txt",
+  "questions": [
+    {
+      "id": "U1",
+      "category": "ios_triple_decision_reversal",
+      "chat_file": "tests/fixtures/unseen_ios_24h_chat.txt",
+      "question": "How is badge printing being handled right now, and how did that decision change over time?",
+      "expected_answer": "Badge printing now uses a WiFi CUPS print server on Raspberry Pi (final decision on 22/08/2026, with Neha finishing the WiFi CUPS driver). Earlier the team chose Bluetooth thermal SDK (escpos-bt) on 10/08/2026, dropped it on 12/08/2026 because Bluetooth kept dropping and switched to USB OTG thermal bridge (usb-spooler), and then reversed to WiFi CUPS because USB OTG only allowed one tablet per printer across 3 check-in counters.",
+      "expected_supported": true,
+      "expected_partial_status_only": false,
+      "expected_msg_ids_any": ["M008", "M009", "M021", "M022", "M050", "M051", "M053", "M054", "M076"],
+      "fact_hint_groups": [
+        ["cups", "wifi cups"],
+        ["escpos-bt", "bluetooth"],
+        ["usb-spooler", "usb otg"]
+      ],
+      "forbidden_substrings": []
+    },
+    {
+      "id": "U2",
+      "category": "ios_derived_deadline_shift",
+      "chat_file": "tests/fixtures/unseen_ios_24h_chat.txt",
+      "question": "When is the kiosk dry run scheduled, and what happened to the opening ceremony date?",
+      "expected_answer": "The kiosk dry run is scheduled for 17 Sep (4 days before the opening ceremony). The opening ceremony shifted from 18 Sep to 22 Sep, and was then corrected to a final date of 21 Sep because 22 Sep clashed with convocation rehearsal.",
+      "expected_supported": true,
+      "expected_partial_status_only": false,
+      "expected_msg_ids_any": ["M016", "M017", "M047", "M063", "M064", "M065", "M066"],
+      "fact_hint_groups": [
+        ["17 sep", "sep 17"],
+        ["4 days before"],
+        ["21 sep", "sep 21"],
+        ["18 sep", "22 sep"]
+      ],
+      "forbidden_substrings": []
+    },
+    {
+      "id": "U3",
+      "category": "ios_handoff_and_unassigned_work",
+      "chat_file": "tests/fixtures/unseen_ios_24h_chat.txt",
+      "question": "Who took over the QR scanner module, is it finished, and is anything unassigned right now?",
+      "expected_answer": "Tanya took over the QR scanner module from Ananya (when it was 75% done on branch qr-v2) and finished and tagged it in v1.4. Volunteer roster sync is unassigned: Siddharth dropped it on 15/08/2026, nobody claimed it, and Vikram deferred assigning it to the 14 Sep planning call.",
+      "expected_supported": true,
+      "expected_partial_status_only": false,
+      "expected_msg_ids_any": ["M030", "M039", "M040", "M059", "M089", "M090", "M091"],
+      "fact_hint_groups": [
+        ["tanya"],
+        ["ananya"],
+        ["v1.4", "done", "finished", "completed", "tagged"],
+        ["volunteer roster"],
+        ["unassigned", "nobody", "no one", "koi nahi", "14 sep"]
+      ],
+      "forbidden_substrings": []
+    },
+    {
+      "id": "U4",
+      "category": "ios_first_person_and_unconfirmed_eta",
+      "chat_file": "tests/fixtures/unseen_ios_24h_chat.txt",
+      "question": "Did Vikram finish the check-in analytics dashboard?",
+      "expected_answer": "The chat doesn't say whether Vikram finished the check-in analytics dashboard. Vikram owns it (assigned via 'I' in M011), missed an earlier 'kal tak' promise, and on 05/09/2026 said it was still pending with an ETA of 12 Sep before the chat ended on 10/09/2026.",
+      "expected_supported": true,
+      "expected_partial_status_only": true,
+      "expected_msg_ids_any": ["M011", "M078", "M079", "M083"],
+      "fact_hint_groups": [
+        ["vikram"],
+        ["doesn't say", "pending", "unconfirmed", "not confirmed", "not finished"],
+        ["12 sep", "sep 12"]
+      ],
+      "forbidden_substrings": ["vikram finished", "analytics dashboard is done", "analytics dashboard is completed"]
+    },
+    {
+      "id": "U5",
+      "category": "ios_deleted_and_post_chat_abstention",
+      "chat_file": "tests/fixtures/unseen_ios_24h_chat.txt",
+      "question": "What was the admin WiFi password Vikram deleted on 29 Aug, and what was decided in the 14 Sep planning call?",
+      "expected_answer": "the chat doesn't say",
+      "expected_supported": false,
+      "expected_partial_status_only": false,
+      "expected_msg_ids_any": [],
+      "fact_hint_groups": [
+        ["the chat doesn't say"]
+      ],
+      "forbidden_substrings": []
+    },
+    {
+      "id": "U6",
+      "category": "noisy_buried_triple_reversal",
+      "chat_file": "tests/fixtures/unseen_noisy_large_chat.txt",
+      "question": "What motor controller decision did the team finally make, how did it change over the 5 weeks, and who is handling its firmware?",
+      "expected_answer": "The team finally decided on VESC 6.0 CAN controllers (24/07/26), with Dev handling VESC firmware tuning (currently at bench calibration). Originally they chose L298N driver boards for prototype (02/07/26), dropped L298N on 10/07/26 after it overheated and burned at 4A and switched to BTS7960 43A H-bridge, and then scrapped BTS7960 when alumni donated VESC 6.0 CAN controllers.",
+      "expected_supported": true,
+      "expected_partial_status_only": false,
+      "expected_msg_ids_any": ["M023", "M025", "M099", "M103", "M104", "M217", "M221", "M314"],
+      "fact_hint_groups": [
+        ["vesc"],
+        ["l298n"],
+        ["bts7960"],
+        ["dev"]
+      ],
+      "forbidden_substrings": []
+    },
+    {
+      "id": "U7",
+      "category": "noisy_buried_task_swap_and_completion",
+      "chat_file": "tests/fixtures/unseen_noisy_large_chat.txt",
+      "question": "Who currently owns the telemetry radio link and sensor mast CAD, and are those tasks completed?",
+      "expected_answer": "Zoya currently owns the telemetry radio link and Ira owns sensor mast CAD after swapping on 18/07/26 (when Ira had telemetry radio link at 40% on lora-packets). Both tasks are completed: Zoya finished and range-tested the telemetry radio link at 400m, and Ira finished sensor mast CAD with STEP and STL files exported.",
+      "expected_supported": true,
+      "expected_partial_status_only": false,
+      "expected_msg_ids_any": ["M009", "M166", "M167", "M168", "M304", "M305"],
+      "fact_hint_groups": [
+        ["zoya"],
+        ["ira"],
+        ["400m", "done", "completed", "finished"],
+        ["step", "stl", "done", "completed"]
+      ],
+      "forbidden_substrings": []
+    },
+    {
+      "id": "U8",
+      "category": "noisy_buried_shifted_and_derived_deadline",
+      "chat_file": "tests/fixtures/unseen_noisy_large_chat.txt",
+      "question": "When is the safety inspection video due, and what is the final date for regional qualifiers?",
+      "expected_answer": "The safety inspection video is due 30 Aug (5 days before regional qualifiers), and the confirmed final date for regional qualifiers is 4 Sep (after shifting from 30 Aug to tentative 6 Sep and then correcting to 4 Sep).",
+      "expected_supported": true,
+      "expected_partial_status_only": false,
+      "expected_msg_ids_any": ["M032", "M033", "M173", "M251", "M252", "M253", "M254"],
+      "fact_hint_groups": [
+        ["30 aug", "aug 30"],
+        ["4 sep", "sep 4", "04/09"],
+        ["5 days before"]
+      ],
+      "forbidden_substrings": []
+    },
+    {
+      "id": "U9",
+      "category": "noisy_unassigned_and_partial_progress",
+      "chat_file": "tests/fixtures/unseen_noisy_large_chat.txt",
+      "question": "Is any task unassigned, and did Kunal finish autonomous waypoint nav?",
+      "expected_answer": "Yes, soil moisture probe is unassigned: Tarun dropped it on 11/07/26, nobody claimed it, and Dev put it on the 7 Aug lab review agenda. No, Kunal did not finish autonomous waypoint nav: after broken ETAs, as of 05/08/26 PID tuning is 65% done and obstacle avoidance is still remaining.",
+      "expected_supported": true,
+      "expected_partial_status_only": true,
+      "expected_msg_ids_any": ["M109", "M112", "M236", "M239", "M313"],
+      "fact_hint_groups": [
+        ["soil moisture probe", "soil probe"],
+        ["unassigned", "nobody", "dropped"],
+        ["65%"],
+        ["obstacle avoidance", "remaining", "not finished", "bacha", "incomplete", "doesn't say"]
+      ],
+      "forbidden_substrings": ["kunal finished autonomous waypoint", "waypoint nav is done", "waypoint nav is completed"]
+    },
+    {
+      "id": "U10",
+      "category": "noisy_deleted_and_post_chat_abstention",
+      "chat_file": "tests/fixtures/unseen_noisy_large_chat.txt",
+      "question": "What was the competition portal team login PIN that Dev deleted on 16 July, and what happened at the Friday 7 Aug lab review?",
+      "expected_answer": "the chat doesn't say",
+      "expected_supported": false,
+      "expected_partial_status_only": false,
+      "expected_msg_ids_any": [],
+      "fact_hint_groups": [
+        ["the chat doesn't say"]
+      ],
+      "forbidden_substrings": []
+    }
+  ]
+}

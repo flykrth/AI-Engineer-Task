@@ -590,3 +590,119 @@ def test_key_normalization_and_alias_matching() -> None:
     # Distinct topics must NOT collide.
     assert resolve_canonical_key("auth_tests", registered) == "auth_tests"
     assert resolve_canonical_key("seller_dashboard", registered) == "seller_dashboard"
+
+
+def test_compiler_scaling_over_1000_lines_dedup_and_key_preservation(
+    tmp_path: Path,
+) -> None:
+    from datetime import datetime, timedelta
+    import time
+
+    start_dt = datetime(2026, 7, 1, 9, 0)
+    raw_lines: list[str] = []
+    # Build 1,100 lines (~900+ messages plus multi-line continuations) across 5 weeks.
+    for msg_idx in range(1, 920):
+        ts = (start_dt + timedelta(minutes=msg_idx * 45)).strftime("%d/%m/%y, %I:%M %p")
+        sender = ["Dev", "Ira", "Kunal", "Sana", "Tarun", "Zoya"][msg_idx % 6]
+        if msg_idx == 20:
+            raw_lines.append(f"{ts} - {sender}: Motor drive controller set to L298N.")
+        elif msg_idx == 24:
+            raw_lines.append(f"{ts} - {sender}: Telemetry link assigned to Ira.")
+        elif msg_idx == 450:
+            raw_lines.append(f"{ts} - {sender}: Drop L298N, motor controller reversed to BTS7960.")
+        elif msg_idx == 780:
+            raw_lines.append(f"{ts} - {sender}: Final reversal: motor controller is VESC CAN.")
+            raw_lines.append("Controller calibration starts tomorrow.")
+        elif msg_idx % 5 == 0:
+            raw_lines.append(f"{ts} - {sender}: Multi-line workshop note {msg_idx}:")
+            raw_lines.append(f"detail line A for note {msg_idx}")
+        else:
+            raw_lines.append(f"{ts} - {sender}: General banter message {msg_idx}.")
+
+    raw = "\n".join(raw_lines)
+    chat = parse_chat_text(raw)
+    assert chat.total_source_lines >= 1000
+    assert len(chat.messages) == 919
+
+    windows = build_message_windows(chat.messages, window_size=25, overlap=6)
+    assert len(windows) >= 40
+    covered_ids = {m.msg_id for win in windows for m in win}
+    assert len(covered_ids) == len(chat.messages)
+
+    seen_prompts: list[str] = []
+
+    def responder(idx: int, prompt: str) -> WindowExtractionResult:
+        seen_prompts.append(prompt)
+        decisions: list[DecisionDelta] = []
+        tasks: list[TaskDelta] = []
+        # Emit overlapping deltas whenever key boundary messages appear in the window.
+        if "[M020 " in prompt:
+            decisions.append(
+                DecisionDelta(
+                    topic_key="motor_controller",
+                    title="Motor controller",
+                    action="confirmed",
+                    value="L298N",
+                    evidence_msg_ids=["M020"],
+                )
+            )
+        if "[M024 " in prompt:
+            tasks.append(
+                TaskDelta(
+                    task_key="telemetry_link",
+                    title="Telemetry link",
+                    action="assigned",
+                    owner="Ira",
+                    evidence_msg_ids=["M024"],
+                )
+            )
+        if "[M450 " in prompt:
+            assert "motor_controller" in prompt
+            decisions.append(
+                DecisionDelta(
+                    topic_key="motor_controller_decision",
+                    title="Motor controller",
+                    action="reversed",
+                    value="BTS7960",
+                    evidence_msg_ids=["M450"],
+                )
+            )
+        if "[M780 " in prompt:
+            assert "motor_controller" in prompt
+            decisions.append(
+                DecisionDelta(
+                    topic_key="motor_controller_choice",
+                    title="Motor controller",
+                    action="reversed",
+                    value="VESC CAN",
+                    evidence_msg_ids=["M780"],
+                )
+            )
+        return WindowExtractionResult(decisions=decisions, tasks=tasks)
+
+    t0 = time.perf_counter()
+    adapter = ScriptedWindowAdapter(responder)
+    state = compile_project_state(
+        chat,
+        adapter,
+        raw_text=raw,
+        window_size=25,
+        overlap=6,
+        cache_dir=tmp_path / ".cache",
+    )
+    elapsed = time.perf_counter() - t0
+
+    assert elapsed < 5.0
+    assert len(seen_prompts) == len(windows)
+    assert len(state.decisions) == 1
+    assert state.decisions[0].topic_key == "motor_controller"
+    assert state.decisions[0].current_value == "VESC CAN"
+    # Overlap windows covering M020/M450/M780 must deduplicate cleanly into exactly 3 history entries.
+    assert [h.value for h in state.decisions[0].history] == [
+        "L298N",
+        "BTS7960",
+        "VESC CAN",
+    ]
+    assert len(state.tasks) == 1
+    assert state.tasks[0].task_key == "telemetry_link"
+    assert state.tasks[0].current_owner == "Ira"
