@@ -1,0 +1,253 @@
+{
+  "suite_name": "team_chat_15q",
+  "description": "15 hand-worked evaluation questions covering temporal reversals, derived deadlines, handoffs, unassigned work, sarcasm/unconfirmed outcomes, media/deleted traps, interleaved ambiguity, and bilingual Hinglish on data/team_chat.txt.",
+  "default_chat_file": "data/team_chat.txt",
+  "questions": [
+    {
+      "id": "Q1",
+      "category": "current_state_and_partial_completion",
+      "chat_file": "data/team_chat.txt",
+      "question": "Who currently owns payments, what payment method is being used, and is the feature finished?",
+      "expected_answer": "Kabir currently owns payments using Razorpay test mode. It is not finished yet: checkout is working, but the payments webhook is still remaining.",
+      "expected_supported": true,
+      "expected_partial_status_only": true,
+      "expected_msg_ids_any": ["M062", "M066", "M067", "M086"],
+      "fact_hint_groups": [
+        ["kabir"],
+        ["razorpay"],
+        ["test mode"],
+        ["webhook"],
+        ["remaining", "incomplete", "not finished", "unfinished", "bacha", "pending", "doesn't say"]
+      ],
+      "forbidden_substrings": ["upi qr is currently used"]
+    },
+    {
+      "id": "Q2",
+      "category": "triple_decision_and_owner_reversal",
+      "chat_file": "data/team_chat.txt",
+      "question": "What was the original decision about payments and how did it change over time?",
+      "expected_answer": "Initially Meera owned payments and planned to use Razorpay (05/10/26). On 20/10/26 the team dropped Razorpay due to missing business KYC and switched to a UPI QR manual confirmation flow. On 02/11/26 Kabir found Razorpay test mode works without KYC, so they scrapped UPI QR, reversed back to Razorpay test mode, and Kabir took over payments ownership while Meera focused on report and PPT.",
+      "expected_supported": true,
+      "expected_partial_status_only": false,
+      "expected_msg_ids_any": ["M017", "M020", "M047", "M050", "M051", "M062", "M066", "M067"],
+      "fact_hint_groups": [
+        ["meera"],
+        ["razorpay"],
+        ["kyc"],
+        ["qr", "upi"],
+        ["test mode"],
+        ["kabir"]
+      ],
+      "forbidden_substrings": []
+    },
+    {
+      "id": "Q3",
+      "category": "derived_deadline_and_dependency_rule",
+      "chat_file": "data/team_chat.txt",
+      "question": "When is the project report due, and what rule determines that deadline?",
+      "expected_answer": "The project report is due 23 Nov. It is governed by the rule that the report is due 3 days before demo day (which shifted from 4 Dec to 27 Nov and was finalized as 26 Nov).",
+      "expected_supported": true,
+      "expected_partial_status_only": false,
+      "expected_msg_ids_any": ["M028", "M079", "M080", "M081"],
+      "fact_hint_groups": [
+        ["23 nov", "nov 23", "23rd nov"],
+        ["3 days before"],
+        ["26 nov", "demo day"]
+      ],
+      "forbidden_substrings": []
+    },
+    {
+      "id": "Q4",
+      "category": "cascading_deadline_shifts_and_constraints",
+      "chat_file": "data/team_chat.txt",
+      "question": "When is the final demo day, how did the date shift, and can the team demo on localhost?",
+      "expected_answer": "Final demo day is 26 Nov (Thursday). It was originally 4 Dec, preponed to 27 Nov (Friday) on 05/11/26, and then corrected to 26 Nov on 09/11/26 because 27 Nov was a typo in the notice. No, localhost is not allowed: a live deployed link is required for the demo.",
+      "expected_supported": true,
+      "expected_partial_status_only": false,
+      "expected_msg_ids_any": ["M028", "M069", "M079", "M080", "M082"],
+      "fact_hint_groups": [
+        ["26 nov", "nov 26"],
+        ["4 dec", "dec 4"],
+        ["27 nov", "nov 27"],
+        ["localhost"],
+        ["live", "deployed"]
+      ],
+      "forbidden_substrings": []
+    },
+    {
+      "id": "Q5",
+      "category": "partial_handoff_and_completion",
+      "chat_file": "data/team_chat.txt",
+      "question": "Who worked on auth, how was it handed off, and is it completed?",
+      "expected_answer": "Rohan originally took auth (05/10/26) and got it 60% done on branch auth-wip. On 24/10/26, overloaded with his semester project and internship, Rohan handed auth off to Kabir in exchange for taking DB schema and tests. On 10/11/26 Kabir confirmed auth is done and merged.",
+      "expected_supported": true,
+      "expected_partial_status_only": false,
+      "expected_msg_ids_any": ["M017", "M052", "M054", "M085"],
+      "fact_hint_groups": [
+        ["rohan"],
+        ["60%"],
+        ["auth-wip"],
+        ["kabir"],
+        ["done", "merged", "completed"]
+      ],
+      "forbidden_substrings": []
+    },
+    {
+      "id": "Q6",
+      "category": "task_swap_and_status",
+      "chat_file": "data/team_chat.txt",
+      "question": "Who owns the DB schema and what is its current status?",
+      "expected_answer": "Rohan owns the DB schema after taking it in a swap when Kabir took over auth on 24/10/26. After sharing schema v1, Rohan confirmed on 06/11/26 that schema v2 is ready with the orders table added.",
+      "expected_supported": true,
+      "expected_partial_status_only": false,
+      "expected_msg_ids_any": ["M054", "M055", "M057", "M075"],
+      "fact_hint_groups": [
+        ["rohan"],
+        ["v2", "schema"],
+        ["orders"],
+        ["ready", "done", "completed"]
+      ],
+      "forbidden_substrings": []
+    },
+    {
+      "id": "Q7",
+      "category": "broken_promises_and_unconfirmed_completion",
+      "chat_file": "data/team_chat.txt",
+      "question": "Who is responsible for tests, and did they finish them?",
+      "expected_answer": "Rohan is responsible for tests (taken in the 24/10/26 swap). Although he promised multiple ETAs (kal raat tak, kal pakka, by this Sunday), tests remained pending as of 09/11/26 and 10/11/26, and the chat doesn't say whether tests finished before the log ended on 12/11/26.",
+      "expected_supported": true,
+      "expected_partial_status_only": true,
+      "expected_msg_ids_any": ["M054", "M055", "M076", "M078", "M084", "M091"],
+      "fact_hint_groups": [
+        ["rohan"],
+        ["doesn't say", "not finished", "pending", "unconfirmed", "not confirmed", "never confirmed"]
+      ],
+      "forbidden_substrings": ["rohan finished the tests", "tests are done", "tests are completed"]
+    },
+    {
+      "id": "Q8",
+      "category": "global_negative_unassigned_query",
+      "chat_file": "data/team_chat.txt",
+      "question": "Is there anything nobody is working on?",
+      "expected_answer": "Yes, the search feature has no owner. Kabir dropped search on 19/10/26 because chat with websockets was already complex, Priya declined taking it on 19/10/26 and 10/11/26, Rohan stayed on schema and tests, and Aarav put deciding who takes search on the Saturday 14 Nov meeting agenda.",
+      "expected_supported": true,
+      "expected_partial_status_only": false,
+      "expected_msg_ids_any": ["M044", "M046", "M087", "M089", "M091", "M097"],
+      "fact_hint_groups": [
+        ["search"],
+        ["unassigned", "nobody", "no one", "dropped", "koi nahi"]
+      ],
+      "forbidden_substrings": []
+    },
+    {
+      "id": "Q9",
+      "category": "completed_vs_in_progress_per_person",
+      "chat_file": "data/team_chat.txt",
+      "question": "What work has Priya finished and what is she currently working on?",
+      "expected_answer": "Priya finished the listings UI and filters (26/10/26). She is currently working on the seller dashboard (started 26/10/26 and still on it on 10/11/26), and the chat doesn't say whether the seller dashboard is finished.",
+      "expected_supported": true,
+      "expected_partial_status_only": true,
+      "expected_msg_ids_any": ["M023", "M058", "M089"],
+      "fact_hint_groups": [
+        ["listing", "listings"],
+        ["filter", "filters"],
+        ["seller dashboard"]
+      ],
+      "forbidden_substrings": ["seller dashboard is done", "seller dashboard is completed", "finished the seller dashboard"]
+    },
+    {
+      "id": "Q10",
+      "category": "anaphora_and_price_comparison",
+      "chat_file": "data/team_chat.txt",
+      "question": "Which domain registrar did the team choose, how much did the domain cost, and who bought it?",
+      "expected_answer": "Aarav bought campuscart.in from Namecheap for Rs 650 (16/10/26), choosing it over GoDaddy which cost Rs 800 per year.",
+      "expected_supported": true,
+      "expected_partial_status_only": false,
+      "expected_msg_ids_any": ["M035", "M037", "M038", "M040"],
+      "fact_hint_groups": [
+        ["namecheap"],
+        ["650"],
+        ["aarav"],
+        ["campuscart.in"]
+      ],
+      "forbidden_substrings": []
+    },
+    {
+      "id": "Q11",
+      "category": "decision_with_rejected_alternative",
+      "chat_file": "data/team_chat.txt",
+      "question": "What hosting platform was chosen for deployment, and which alternative was rejected and why?",
+      "expected_answer": "Render was chosen for deployment (26/10/26). AWS was rejected because Meera warned that free-tier usage could still lead to unexpected billing charges (Railway was also suggested as an alternative, with Render selected).",
+      "expected_supported": true,
+      "expected_partial_status_only": false,
+      "expected_msg_ids_any": ["M059", "M060", "M061", "M083"],
+      "fact_hint_groups": [
+        ["render"],
+        ["aws"],
+        ["bill", "billing", "free tier", "charge", "cost"]
+      ],
+      "forbidden_substrings": []
+    },
+    {
+      "id": "Q12",
+      "category": "unconfirmed_future_eta",
+      "chat_file": "data/team_chat.txt",
+      "question": "Did Aarav finish deploying on Render?",
+      "expected_answer": "The chat doesn't say whether Aarav finished deploying on Render. On 09/11/26 he said he was deploying on Render with a target ETA of 15 Nov, and on 12/11/26 deployment status was still on the agenda for the 14 Nov meeting.",
+      "expected_supported": true,
+      "expected_partial_status_only": true,
+      "expected_msg_ids_any": ["M017", "M083", "M097"],
+      "fact_hint_groups": [
+        ["doesn't say", "not confirmed", "unconfirmed", "never confirmed", "unknown"],
+        ["15 nov", "nov 15"]
+      ],
+      "forbidden_substrings": ["aarav finished deploying", "deployment is live", "deployed and live"]
+    },
+    {
+      "id": "Q13",
+      "category": "interleaved_ambiguous_decision",
+      "chat_file": "data/team_chat.txt",
+      "question": "Which logo option did the team finalize?",
+      "expected_answer": "The team did not finalize a logo option (the chat doesn't say whether a logo was finalized). Priya shared 2 options on 12/11/26, Meera said she preferred the second (blue) one, and Aarav replied 'obviously' right after Rohan asked if Aarav was coming to the meeting, making Aarav's reply ambiguous.",
+      "expected_supported": true,
+      "expected_partial_status_only": true,
+      "expected_msg_ids_any": ["M098", "M099", "M100", "M101", "M102"],
+      "fact_hint_groups": [
+        ["not finalized", "not confirmed", "doesn't say", "ambiguous", "uncertain", "unconfirmed", "no consensus"],
+        ["blue", "second"]
+      ],
+      "forbidden_substrings": ["finalized the blue logo", "confirmed the blue logo", "team chose the second logo"]
+    },
+    {
+      "id": "Q14",
+      "category": "pure_abstention_traps",
+      "chat_file": "data/team_chat.txt",
+      "question": "What did Aarav's deleted message on 16 Oct say, what was decided at the Saturday 14 Nov meeting, and what is the project's GitHub repo URL?",
+      "expected_answer": "the chat doesn't say",
+      "expected_supported": false,
+      "expected_partial_status_only": false,
+      "expected_msg_ids_any": [],
+      "fact_hint_groups": [
+        ["the chat doesn't say"]
+      ],
+      "forbidden_substrings": []
+    },
+    {
+      "id": "Q15",
+      "category": "bilingual_hinglish_query",
+      "chat_file": "data/team_chat.txt",
+      "question": "Kya localhost pe demo chalega aur chat feature kitna hua hai?",
+      "expected_answer": "Nahi, localhost par demo nahi chalega: live deployed link chahiye (09/11/26). Chat feature Kabir kar raha hai aur 10/11/26 tak 70% hua hai, abhi complete nahi hua hai (the chat doesn't say whether it finished after 10/11/26).",
+      "expected_supported": true,
+      "expected_partial_status_only": true,
+      "expected_msg_ids_any": ["M044", "M082", "M085"],
+      "fact_hint_groups": [
+        ["nahi", "no", "not allowed", "nahi chalega"],
+        ["live", "deployed"],
+        ["70%"],
+        ["kabir"]
+      ],
+      "forbidden_substrings": ["chat feature is finished", "chat feature is done", "chat feature complete ho gaya"]
+    }
+  ]
+}
