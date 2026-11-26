@@ -214,3 +214,36 @@ class ProjectState(BaseModel):
     tasks: list[TaskRecord] = Field(default_factory=list)
     deadlines: list[DeadlineRecord] = Field(default_factory=list)
     open_items: list[OpenItemRecord] = Field(default_factory=list)
+
+
+class DraftAnswer(BaseModel):
+    """Unverified LLM draft answer citing only raw message IDs."""
+
+    reasoning_trace: str = Field(
+        description="Step-by-step chronological check of ProjectState history and raw evidence blocks."
+    )
+    supported: bool = Field(
+        description="True when the chat contains verified information answering the question; False when missing, deleted, or post-chat."
+    )
+    partial_status_only: bool = Field(
+        default=False,
+        description="True when the task/topic was discussed but completion was never confirmed before the chat ended.",
+    )
+    answer: str = Field(
+        description="Grounded English or Hinglish answer, or 'the chat doesn't say' when unsupported."
+    )
+    evidence_msg_ids: list[str] = Field(
+        default_factory=list,
+        description="List of exact msg_id strings from the chat (e.g. ['M017', 'M042']). Never include timestamps or line numbers.",
+    )
+
+
+class VerifiedAnswer(BaseModel):
+    """Deterministically verified answer with grounded EvidenceRef citations."""
+
+    answer: str
+    supported: bool
+    partial_status_only: bool = False
+    evidence: list[EvidenceRef] = Field(default_factory=list)
+    verification_status: str
+    rejected_msg_ids: list[str] = Field(default_factory=list)
