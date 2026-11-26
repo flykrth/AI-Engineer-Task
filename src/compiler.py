@@ -142,23 +142,24 @@ Rules:
 3. Resolve first-person pronouns ("I", "me", "my", "Main", "mein", "mera", "meri") to the exact sender name on that message header. Never output "Main" or "I" as an owner.
 4. Use lowercase snake_case keys (topic_key, task_key, item_key, issue_key). If an entity already appears in the Active Canonical Key Registry, REUSE that exact key instead of inventing a synonym.
 5. Decisions:
-   - Use "proposed" for suggestions or unconfirmed preferences.
-   - Use "confirmed" only for explicit agreement, selection, or completed purchase/action.
+   - Use "proposed" for suggestions or one person's preference.
+   - Use "confirmed" ONLY when there is explicit, unambiguous group agreement on that exact topic (e.g. "final", "agreed", "decided", "+1", or confirmed purchase).
    - Use "reversed" when a later message replaces an earlier decision; put the NEW active choice in "value" and note what was replaced in "rationale".
    - Use "dropped" when an option is abandoned without replacement.
-   - Use "uncertain" for ambiguous banter, jokes, or one-word replies across interleaved topics; never mark ambiguous banter as "confirmed".
+   - Use "uncertain" (NEVER "confirmed") when a short or playful reply (such as "obviously", "yes", "sure", or a laughing emoji reaction) immediately follows two different interleaved topics or questions from different speakers (making it ambiguous which message it answered). When one person states a preference and the only response is an ambiguous or laughing reply interleaved with another topic, classify the decision as "uncertain" (never "confirmed") and also emit an OpenIssueDelta ("opened") noting it is still unconfirmed.
 6. Tasks:
-   - Extract each distinct task separately (including items inside multi-line task split messages).
-   - Use "assigned" for initial ownership and "reassigned" when ownership transfers or swaps to a new owner. Only reassign after the new owner agrees or accepts.
+   - CRITICAL: Never combine multiple deliverables into one TaskDelta. Whenever one line or message assigns "TaskA + TaskB" or "TaskA and TaskB" (for example, "Alice - backend + docs"), ALWAYS emit TWO separate TaskDelta items with separate atomic task_keys (e.g. "backend" and "docs") so later partial handoffs, drops, or completions track independently.
+   - Use "assigned" for initial ownership and "reassigned" whenever ownership transfers, swaps, or a participant takes over an existing task (including phrases like "I'll take X", "X is mine now", "X ab mere paas", or "you focus on Y instead" -> emit "reassigned" with owner resolved to the new owner). Only reassign once the new owner accepts or claims it.
    - Use "dropped_unassigned" when an owner drops a task or asks someone else to take it and nobody claims it (set owner=null).
    - Use "progress_updated" for partial progress (e.g., "60% done", "v1 pushed", "only X remaining"). Never mark partial work as "completed".
-   - Use "promised_eta" for future promises, target dates, or ETAs (e.g., "kal tak", "by Sunday", "ready by <date>", "kal pakka") and for promises mocked sarcastically by teammates; NEVER mark a promise or ETA as "completed".
+   - Use "promised_eta" for future promises, target dates, or ETAs (e.g., "kal tak", "by Sunday", "ready by <date>", "kal pakka") and for promises mocked sarcastically by teammates; NEVER mark a promise or ETA as "completed". Do not emit task promised_eta for pure deliverable deadline reminders that belong in deadlines.
    - Use "completed" ONLY when the work is explicitly finished, merged, or done.
    - Use "blocked" when work is blocked by missing access, dependencies, or external hurdles.
 7. Deadlines and dependencies:
-   - Use "set" for a firm initial date, "changed" when a date moves, "tentative" for uncertain dates (e.g. ending with "?"), and "rule_defined" when a relative rule is given (put the relative offset in dependency_rule).
+   - Extract EVERY milestone or deliverable deadline mentioned; if one message states both an anchor milestone date and a dependent deliverable date/rule, emit separate DeadlineDelta items for each.
+   - Use "set" for a firm initial date, "changed" every time a date moves or is corrected, "tentative" for uncertain dates (e.g. ending with "?"), and "rule_defined" when a relative rule is given (put the relative offset in dependency_rule).
 8. Open items:
-   - Use "opened" for unresolved questions, unclaimed work raised in discussion, unconfirmed options (such as unpicked visual designs), or pending meeting agenda topics.
+   - Use "opened" for unresolved questions, unclaimed work raised in discussion, unconfirmed options (such as shared design options without clear unanimous approval), or pending meeting agenda topics. Set owner=null when ownership itself is unresolved or under debate.
    - Use "deferred" when postponed to a later meeting/date, and "resolved" when settled.
 9. Media, edited, and deleted markers:
    - Read adjacent messages around "<Media omitted>" to understand screenshots, diagrams, receipts, or design options, and cite the explanatory message IDs.
@@ -218,7 +219,8 @@ def build_message_windows(
     start = 0
     while start < len(msg_list):
         end = min(len(msg_list), start + window_size)
-        windows.append(msg_list[start:end])
+        window_start = max(0, end - window_size) if end == len(msg_list) else start
+        windows.append(msg_list[window_start:end])
         if end >= len(msg_list):
             break
         start += step
@@ -382,10 +384,25 @@ def _deduplicate_anchored_deltas(
         for idx, prev in enumerate(kept):
             if prev.canonical_key != item.canonical_key:
                 continue
-            if prev.delta.action != item.delta.action:
-                continue
             prev_ids = set(prev.valid_ids)
             if not (prev_ids & item_ids):
+                continue
+
+            same_action = prev.delta.action == item.delta.action
+            if kind == "decision" and not same_action:
+                assert isinstance(prev.delta, DecisionDelta) and isinstance(
+                    item.delta, DecisionDelta
+                )
+                same_resolved_value = _norm_text_for_compare(
+                    prev.delta.value
+                ) == _norm_text_for_compare(item.delta.value)
+                both_decided = {prev.delta.action, item.delta.action} <= {
+                    "confirmed",
+                    "reversed",
+                }
+                if not (same_resolved_value and both_decided):
+                    continue
+            elif not same_action:
                 continue
 
             compatible = False
@@ -640,10 +657,36 @@ def _reduce_decisions(
             )
             continue
 
-        _append_history_entry(existing.history, history_entry)
         same_value = _norm_text_for_compare(existing.current_value) == _norm_text_for_compare(
             delta.value
         )
+        if same_value and existing.history:
+            last = existing.history[-1]
+            if (
+                last.action in ("confirmed", "reversed")
+                and delta.action in ("confirmed", "reversed")
+                and (
+                    last.timestamp_iso == history_entry.timestamp_iso
+                    or {r.msg_id for r in last.evidence} & {r.msg_id for r in refs}
+                )
+            ):
+                merged_action: DecisionStatus = (
+                    "confirmed"
+                    if "confirmed" in (last.action, delta.action)
+                    else delta.action
+                )
+                existing.history[-1] = last.model_copy(
+                    update={
+                        "action": merged_action,
+                        "note": last.note or history_entry.note,
+                        "evidence": _merge_unique_evidence(last.evidence, refs),
+                    }
+                )
+                existing.status = merged_action
+                existing.evidence = _merge_unique_evidence(existing.evidence, refs)
+                continue
+
+        _append_history_entry(existing.history, history_entry)
         new_status: DecisionStatus = delta.action
         if delta.action == "proposed" and existing.status == "confirmed" and same_value:
             new_status = "confirmed"
@@ -697,7 +740,7 @@ def _reduce_tasks(
             continue
 
         _append_history_entry(existing.history, history_entry)
-        _apply_task_delta(existing, delta, refs)
+        _apply_task_delta(existing, delta, refs, anchor_iso=anchor_msg.timestamp_iso)
 
     return list(records.values())
 
@@ -718,8 +761,19 @@ def _initial_task_status(action: str, owner: str | None) -> TaskStatus:
     return "unconfirmed"
 
 
+_REOPEN_NOTE_RE = re.compile(
+    r"\b(?:remaining|pending|left|incomplete|unfinished|reopen(?:ed)?|wip|todo|bacha|baaki)\b"
+    r"|\b(?:[1-9]?\d)%",
+    re.IGNORECASE,
+)
+
+
 def _apply_task_delta(
-    record: TaskRecord, delta: TaskDelta, refs: list[EvidenceRef]
+    record: TaskRecord,
+    delta: TaskDelta,
+    refs: list[EvidenceRef],
+    *,
+    anchor_iso: str,
 ) -> None:
     action = delta.action
     note = (delta.status_note or "").strip()
@@ -759,7 +813,13 @@ def _apply_task_delta(
     if action == "progress_updated":
         if record.current_owner is None and delta.owner is not None:
             record.current_owner = delta.owner
-        if record.status != "completed":
+        later_than_last = bool(
+            record.history and anchor_iso > record.history[-2].timestamp_iso
+            if len(record.history) >= 2
+            else False
+        )
+        explicitly_reopened = later_than_last and bool(_REOPEN_NOTE_RE.search(note))
+        if record.status != "completed" or explicitly_reopened:
             record.status = "in_progress"
         if note:
             record.status_note = note
@@ -1059,7 +1119,9 @@ def _build_window_prompt(
         f"{registry.format_for_prompt()}\n\n"
         "Chronological chat messages:\n"
         f"{transcript}\n\n"
-        "Extract all decisions, tasks, deadlines, and open items updated in this window."
+        "Extract all decisions, tasks, deadlines, and open items updated in this window. "
+        "Split any compound 'A + B' or 'A and B' task assignments into separate atomic TaskDelta entries. "
+        "Keep proposals 'uncertain' or 'proposed' if the only positive reply is an ambiguous short word interleaved with a separate topic."
     )
 
 

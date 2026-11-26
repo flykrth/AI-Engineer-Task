@@ -278,6 +278,9 @@ def test_promised_eta_never_marks_task_completed_and_cannot_downgrade_completed(
             "05/10/26, 10:00 PM - Ben: Tests still pending, I'll finish by Sunday.",
             "06/10/26, 10:00 AM - Alice: Maya - packaging script",
             "07/10/26, 11:00 AM - Maya: Packaging script done and tagged.",
+            "08/10/26, 10:00 AM - Alice: Liam - billing module",
+            "09/10/26, 02:00 PM - Liam: Checkout integrated and working.",
+            "11/10/26, 05:00 PM - Liam: Billing webhook remaining.",
         ]
     )
     chat = parse_chat_text(raw)
@@ -331,6 +334,30 @@ def test_promised_eta_never_marks_task_completed_and_cannot_downgrade_completed(
                 status_note="late duplicate note",
                 evidence_msg_ids=["M006"],
             ),
+            TaskDelta(
+                task_key="billing_module",
+                title="Billing module",
+                action="assigned",
+                owner="Liam",
+                evidence_msg_ids=["M007"],
+            ),
+            TaskDelta(
+                task_key="billing_module",
+                title="Billing module",
+                action="completed",
+                owner="Liam",
+                status_note="checkout working",
+                evidence_msg_ids=["M008"],
+            ),
+            # Strictly later message explicitly reporting remaining work reopens to in_progress.
+            TaskDelta(
+                task_key="billing_module",
+                title="Billing module",
+                action="progress_updated",
+                owner="Liam",
+                status_note="webhook remaining",
+                evidence_msg_ids=["M009"],
+            ),
         ]
     )
 
@@ -340,6 +367,8 @@ def test_promised_eta_never_marks_task_completed_and_cannot_downgrade_completed(
     assert by_key["test_suite"].status == "unconfirmed"
     assert by_key["test_suite"].status != "completed"
     assert by_key["packaging_script"].status == "completed"
+    assert by_key["billing"].status == "in_progress"
+    assert by_key["billing"].status_note == "webhook remaining"
 
 
 def test_overlapping_windows_deduplicate_and_pass_canonical_keys(
