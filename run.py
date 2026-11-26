@@ -11,80 +11,13 @@ from typing import Any
 from google.genai import errors as genai_errors
 import httpx
 import openai
-from pydantic import BaseModel, Field
 
 from src.compiler import compile_project_state_with_meta
 from src.llm import BaseLLMAdapter, LLMError, create_llm_adapter
 from src.parser import ParsedChat, parse_chat_file
-from src.schemas import EvidenceRef, ProjectState
-
-_SYSTEM_PROMPT = """You answer questions about an exported WhatsApp group chat.
-
-Rules:
-1. Read all messages in strict chronological order from start to finish. Later decisions, reassignments, and deadline corrections override earlier ones.
-2. Answer in clear English or Hinglish matching the question and chat context.
-3. Base every claim strictly on the provided transcript lines. Do not invent facts or assume unconfirmed future plans or promises were completed.
-4. If the chat never settled the answer, if the relevant message was deleted, or if the topic is not in the chat, set supported=false and set answer to "the chat doesn't say".
-5. For every supported claim, include exact evidence entries using the message's msg_id, line_start, line_end, timestamp_raw, sender, and a short exact quote."""
-
-
-class EvidenceItem(BaseModel):
-    """Exact transcript citation supporting an answer."""
-
-    msg_id: str
-    line_start: int
-    line_end: int
-    timestamp_raw: str
-    sender: str | None = None
-    quote: str
-
-
-class Slice1Answer(BaseModel):
-    """Structured answer returned by Slice 1 Q&A."""
-
-    answer: str
-    supported: bool
-    evidence: list[EvidenceItem] = Field(default_factory=list)
-
-
-def format_transcript(chat: ParsedChat) -> str:
-    """Format parsed messages chronologically with explicit ID and line metadata."""
-    lines: list[str] = []
-    for msg in chat.messages:
-        sender_label = msg.sender if msg.sender is not None else "system"
-        header = (
-            f"[{msg.msg_id} | L{msg.line_start}-L{msg.line_end} | "
-            f"{msg.timestamp_raw} | {sender_label}]"
-        )
-        suffix = " [edited]" if msg.is_edited else ""
-        if msg.kind == "deleted":
-            suffix = f"{suffix} [deleted]"
-        lines.append(f"{header} {msg.text}{suffix}")
-    return "\n".join(lines)
-
-
-def answer_question(
-    chat: ParsedChat,
-    question: str,
-    adapter: BaseLLMAdapter,
-) -> Slice1Answer:
-    """Prompt the configured LLM adapter to answer one question over the parsed chat."""
-    transcript = format_transcript(chat)
-    prompt = (
-        f"Parsed WhatsApp chat ({len(chat.messages)} messages, "
-        f"detected date order {chat.date_order}):\n\n"
-        f"{transcript}\n\n"
-        f"Question: {question}\n"
-    )
-    result = adapter.generate_structured(
-        prompt,
-        Slice1Answer,
-        system_prompt=_SYSTEM_PROMPT,
-        temperature=0.0,
-    )
-    if not result.supported and "the chat doesn't say" not in result.answer.lower():
-        return result.model_copy(update={"answer": "the chat doesn't say"})
-    return result
+from src.qa import answer_and_verify
+from src.retriever import HybridRetriever
+from src.schemas import EvidenceRef, ProjectState, VerifiedAnswer
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -112,7 +45,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--rebuild",
         action="store_true",
-        help="Force recompiling ProjectState even if a cached version exists.",
+        help="Force rebuilding cached ProjectState and retrieval embeddings even if cached versions exist.",
     )
     parser.add_argument(
         "--provider",
@@ -267,10 +200,10 @@ def format_state_text(
 def _format_text_output(
     question: str,
     chat: ParsedChat,
-    result: Slice1Answer,
+    result: VerifiedAnswer,
     adapter: BaseLLMAdapter,
 ) -> str:
-    """Render a concise plain-text answer and evidence block."""
+    """Render a concise plain-text answer and verified evidence block."""
     parts = [
         f"Provider: {adapter.provider_name} ({adapter.chat_model})",
         f"Chat lines: {chat.total_source_lines} | Messages: {len(chat.messages)} | Date order: {chat.date_order}",
@@ -280,16 +213,7 @@ def _format_text_output(
     if result.evidence:
         parts.append("Evidence:")
         for item in result.evidence:
-            sender_label = item.sender if item.sender is not None else "system"
-            line_ref = (
-                f"L{item.line_start}"
-                if item.line_start == item.line_end
-                else f"L{item.line_start}-L{item.line_end}"
-            )
-            parts.append(
-                f"  - [{item.msg_id} | {line_ref} | {item.timestamp_raw} | {sender_label}] "
-                f'"{item.quote}"'
-            )
+            parts.append(f'  - {_format_evidence_ref(item)} "{item.quote}"')
     return "\n".join(parts)
 
 
@@ -313,23 +237,37 @@ def run_cli(
 
     try:
         chat = parse_chat_file(args.chat)
+        raw_text = args.chat.read_text(encoding="utf-8")
         adapter = adapter_factory(provider=args.provider)
+        state, from_cache, _ = compile_project_state_with_meta(
+            chat,
+            adapter,
+            raw_text=raw_text,
+            cache_dir=cache_dir,
+            rebuild=args.rebuild,
+        )
         if args.state_only:
-            raw_text = args.chat.read_text(encoding="utf-8")
-            state, from_cache, _ = compile_project_state_with_meta(
-                chat,
-                adapter,
-                raw_text=raw_text,
-                cache_dir=cache_dir,
-                rebuild=args.rebuild,
-            )
             if args.as_json:
                 print(state.model_dump_json(indent=2))
             else:
                 print(format_state_text(state, adapter, from_cache=from_cache))
             return 0
 
-        result = answer_question(chat, args.question, adapter)
+        retriever = HybridRetriever(
+            chat,
+            adapter,
+            raw_text=raw_text,
+            cache_dir=cache_dir,
+            rebuild=args.rebuild,
+        )
+        retrieval = retriever.retrieve(args.question)
+        result = answer_and_verify(
+            args.question,
+            chat,
+            state,
+            retrieval,
+            adapter,
+        )
     except (
         FileNotFoundError,
         ValueError,
@@ -352,6 +290,9 @@ def run_cli(
             "total_messages": len(chat.messages),
             "answer": result.answer,
             "supported": result.supported,
+            "partial_status_only": result.partial_status_only,
+            "verification_status": result.verification_status,
+            "rejected_msg_ids": result.rejected_msg_ids,
             "evidence": [item.model_dump() for item in result.evidence],
         }
         print(json.dumps(payload, indent=2, ensure_ascii=False))
