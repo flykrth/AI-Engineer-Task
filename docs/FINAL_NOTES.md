@@ -166,4 +166,4 @@ To verify that nothing was hardcoded to `data/team_chat.txt`, the same pipeline 
 
 ## 8. Demo video
 
-Link to your 3-minute screen recording: pending (to be added once recorded)
+Link to your 3-minute screen recording: https://youtu.be/8GH-UQDt9xg

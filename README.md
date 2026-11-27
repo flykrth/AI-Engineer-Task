@@ -66,12 +66,12 @@ Write **at least 10 questions** about this chat, with the correct answers worked
 
 ## Submission checklist
 
-- [ ] Public GitHub repo (fork or copy of this one) with a commit history that shows your process
-- [ ] `docs/DECOMPOSITION.md`, committed before any code
-- [ ] A working command to run the system on any chat file
-- [ ] Your own test questions and results, in `docs/FINAL_NOTES.md`
-- [ ] `docs/FINAL_NOTES.md` complete, with the video link
-- [ ] The repo link, submitted via the form before the deadline
+- [x] Public GitHub repo (fork or copy of this one) with a commit history that shows your process
+- [x] `docs/DECOMPOSITION.md`, committed before any code
+- [x] A working command to run the system on any chat file
+- [x] Your own test questions and results, in `docs/FINAL_NOTES.md`
+- [x] `docs/FINAL_NOTES.md` complete, with the video link
+- [x] The repo link, submitted via the form before the deadline
 
 
 Good luck. We're looking forward to seeing how you think.
